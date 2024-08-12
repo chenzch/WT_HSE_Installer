@@ -46,13 +46,13 @@ typedef union {
     uint64_t raw[2];
     struct {
         uint32_t status;
-        bool firstBlock;
+        bool     firstBlock;
     } Data;
 } RAM_Status, *LPRAM_Status;
 
-#define Status_Data (((LPRAM_Status)&__SRAM_STATUS_START)->Data)
+#define Status_Data (((LPRAM_Status) & __SRAM_STATUS_START)->Data)
 
-#define HSE_GPR_3 (*((uint32_t*)0x4039C028))
+#define HSE_GPR_3            (*((uint32_t *)0x4039C028))
 #define HSE_GPR_3_FW_PRESENT (0x1)
 #define HSE_GPR_3_MU_READY   (0x2)
 

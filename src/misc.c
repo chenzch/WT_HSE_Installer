@@ -28,17 +28,17 @@ void FunctionalReset(void) {
     __asm("isb");
 
     MC_ME.MODE_CONF.B.FUNC_RST = 1;
-    MC_ME.MODE_UPD.B.MODE_UPD = 1;
-    MC_ME.CTL_KEY.B.KEY = (uint32_t)0x00005AF0U;
-    MC_ME.CTL_KEY.B.KEY = (uint32_t)0x0000A50FU;
+    MC_ME.MODE_UPD.B.MODE_UPD  = 1;
+    MC_ME.CTL_KEY.B.KEY        = (uint32_t)0x00005AF0U;
+    MC_ME.CTL_KEY.B.KEY        = (uint32_t)0x0000A50FU;
 }
 
 bool checkHseFwFeatureFlagEnabled(void) {
-    uint64_t default_val = 0xFFFFFFFFFFFFFFFFUL;
-    uint64_t hsefwfeatureflag = *(uint64_t*)UTEST_BASE_ADDR;
+    uint64_t default_val      = 0xFFFFFFFFFFFFFFFFUL;
+    uint64_t hsefwfeatureflag = *(uint64_t *)UTEST_BASE_ADDR;
 
     //check the default value
-    if(0 != memcmp((void *)&hsefwfeatureflag, (void *)&default_val, 0x8U)) {
+    if (0 != memcmp((void *)&hsefwfeatureflag, (void *)&default_val, 0x8U)) {
         return true;
     } else {
         return false;
@@ -56,9 +56,9 @@ bool EnableHseFeature(void) {
     /* entry semaphore loop */
     do {
         PFLASH.PFCPGM_PEADR_L.B.PEADR_L = (uint32_t)UTEST_BASE_ADDR;
-    } while(FLASH.MCR.B.PEID != domain_id);
+    } while (FLASH.MCR.B.PEID != domain_id);
 
-    /* clear any pending program & erase errors                           */
+    /* clear any pending program & erase errors */
     FLASH.MCRS.B.PEP = 1;
     FLASH.MCRS.B.PES = 1;
 
@@ -67,9 +67,10 @@ bool EnableHseFeature(void) {
 
     FLASH.MCR.B.PGM = 1;
     FLASH.MCR.B.EHV = 1;
-    while(!FLASH.MCRS.B.DONE);
+    while (!FLASH.MCRS.B.DONE)
+        ;
     FLASH.MCR.B.EHV = 0;
-    status = FLASH.MCRS.B.PEG;
+    status          = FLASH.MCRS.B.PEG;
     FLASH.MCR.B.PGM = 0;
 
     return status;
@@ -77,10 +78,10 @@ bool EnableHseFeature(void) {
 
 bool IsPOR(void) {
     if (MC_RGM.DES.B.F_POR) {
-    	MC_RGM_DES_tag value;
-    	value.R = 0;
-    	value.B.F_POR = 1;
-    	MC_RGM.DES = value;
+        MC_RGM_DES_tag value;
+        value.R       = 0;
+        value.B.F_POR = 1;
+        MC_RGM.DES    = value;
         return true;
     } else {
         return false;
@@ -88,38 +89,29 @@ bool IsPOR(void) {
 }
 
 bool CheckSBAF(uint8_t socType) {
-/*
- * 05 - S32K344, S32K324, S32K314
- * 0C - S32K311, S32K310
- * 0D - S32K312, S32K342, S32K322, S32K341
- * 0E - S32K358, S32K348, S32K338, S32K328, S32K336, S32K356
- * 0F - S32K396, S32K376, S32K394, S32K374
- * 10 - S32K388
- */
-    bool ret = false;
-    uint64_t SBAFVer = *(uint64_t*)0x4039C020;
-    switch (socType)
-    {
+    /*
+     * 05 - S32K344, S32K324, S32K314
+     * 0C - S32K311, S32K310
+     * 0D - S32K312, S32K342, S32K322, S32K341
+     * 0E - S32K358, S32K348, S32K338, S32K328, S32K336, S32K356
+     * 0F - S32K396, S32K376, S32K394, S32K374
+     * 10 - S32K388
+     */
+    bool     ret     = false;
+    uint64_t SBAFVer = *(uint64_t *)0x4039C020;
+    switch (socType) {
     case 0x05: // S32K344, S32K324, S32K314
-        if (
-            (SBAFVer == (0x0004090000000500UL)) ||
-            (SBAFVer == (0x03000A0000000500UL))
-        ) {
+        if ((SBAFVer == (0x0004090000000500UL)) || (SBAFVer == (0x03000A0000000500UL))) {
             ret = true;
         }
         break;
     case 0x0D: // S32K312, S32K342, S32K322, S32K341
-        if (
-            (SBAFVer == (0x0000080000000D00UL)) ||
-            (SBAFVer == (0x0100090000000D00UL))
-        ) {
+        if ((SBAFVer == (0x0000080000000D00UL)) || (SBAFVer == (0x0100090000000D00UL))) {
             ret = true;
         }
         break;
     case 0x0E: // S32K358
-        if (
-            (SBAFVer == (0x03000C0000000E00UL))
-        ) {
+        if ((SBAFVer == (0x03000C0000000E00UL))) {
             ret = true;
         }
         break;

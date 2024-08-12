@@ -33,34 +33,29 @@
 
 extern uint32_t __HSE_BIN_START;
 
-int main(void)
-{
-    if (IsPOR())
-    {
-        ((LPRAM_Status) & __SRAM_STATUS_START)->raw[0] = 0;
-        ((LPRAM_Status) & __SRAM_STATUS_START)->raw[1] = 0;
-        Status_Data.status = RAM_STATUS_UNKNWON;
-        Status_Data.firstBlock = true;
+int main(void) {
+    if (IsPOR()) {
+        ((LPRAM_Status)&__SRAM_STATUS_START)->raw[0] = 0;
+        ((LPRAM_Status)&__SRAM_STATUS_START)->raw[1] = 0;
+        Status_Data.status                           = RAM_STATUS_UNKNWON;
+        Status_Data.firstBlock                       = true;
     }
 
-    switch (Status_Data.status)
-    {
+    switch (Status_Data.status) {
     case RAM_STATUS_UNKNWON:
-        if (checkHseFwFeatureFlagEnabled() || EnableHseFeature()) {
+        if (checkHseFwFeatureFlagEnabled()) {
             Status_Data.status = RAM_STATUS_UTEST_OK;
         } else {
+            EnableHseFeature();
             FunctionalReset();
         }
-    case RAM_STATUS_UTEST_OK:
-    {
+    case RAM_STATUS_UTEST_OK: {
         uint32_t WaitCount = 4000000U;
-        while (!MU_GetHseStatus())
-        {
-            if (--WaitCount == 0)
-            {
+        while (!MU_GetHseStatus()) {
+            if (--WaitCount == 0) {
                 if (HSE_GPR_3 & HSE_GPR_3_FW_PRESENT) {
                 } else {
-                	DCM_GPR_DCMRWP1 = (DCM_GPR_DCMRWP1 & 0x00FFFFFF) | (0xA5000000);
+                    DCM_GPR_DCMRWP1    = (DCM_GPR_DCMRWP1 & 0x00FFFFFF) | (0xA5000000);
                     Status_Data.status = RAM_STATUS_START_MU_INSTALL;
                 }
                 FunctionalReset();
@@ -68,95 +63,92 @@ int main(void)
         }
         Status_Data.status = RAM_STATUS_FW_INIT_OK;
     }
-    case RAM_STATUS_FW_INIT_OK:
-    {
+    case RAM_STATUS_FW_INIT_OK: {
         hseAttrFwVersion_t gHseFwVersion = {0U};
-        hseAttrFwVersion_t CurrVersion = HSE_FW_VERSION;
+        hseAttrFwVersion_t CurrVersion   = HSE_FW_VERSION;
 
-        if (HSE_SRV_RSP_OK != HSE_GetVersion(&gHseFwVersion))
-        {
+        if (HSE_SRV_RSP_OK != HSE_GetVersion(&gHseFwVersion)) {
             FunctionalReset();
         }
         if ((gHseFwVersion.socTypeId == CurrVersion.socTypeId) &&
             ((gHseFwVersion.majorVersion != CurrVersion.majorVersion) ||
              (gHseFwVersion.minorVersion != CurrVersion.minorVersion) ||
-             (gHseFwVersion.patchVersion != CurrVersion.patchVersion)))
-        {
+             (gHseFwVersion.patchVersion != CurrVersion.patchVersion))) {
             if (HSE_SRV_RSP_OK != TrigUpdateHSEFW()) {
                 // Update failed force reboot
                 FunctionalReset();
             }
-
         }
 
         switch (gHseFwVersion.reserved) {
-            case 1: // AB_SWAP
-                if (Status_Data.firstBlock) {
-                    // Updated in current block, switch to another block
-                    Status_Data.firstBlock = false;
-                    Status_Data.status = RAM_STATUS_UTEST_OK;
-                    HSE_SwitchBlock();
-                    FunctionalReset();
-                } else {
-                    Status_Data.status = RAM_STATUS_UPDATE_FINISHED;
-                }
-                break;
-            case 0: // Full Mem
-            {
-                // Full Mem, Check and Update SBAF
-                if (CheckSBAF(gHseFwVersion.socTypeId)) {
-                    TrigUpdateSBAF();
-                }
+        case 1: // AB_SWAP
+            if (Status_Data.firstBlock) {
+                // Updated in current block, switch to another block
+                Status_Data.firstBlock = false;
+                Status_Data.status     = RAM_STATUS_UTEST_OK;
+                HSE_SwitchBlock();
+                FunctionalReset();
+            } else {
                 Status_Data.status = RAM_STATUS_UPDATE_FINISHED;
             }
-                break;
-            default:
-                for (;;);
-                break;
+            break;
+        case 0: // Full Mem
+            // Full Mem, Check and Update SBAF
+            if (CheckSBAF(gHseFwVersion.socTypeId)) {
+                TrigUpdateSBAF();
+            }
+            Status_Data.status = RAM_STATUS_UPDATE_FINISHED;
+            break;
+        default:
+            for (;;)
+                ;
+            break;
         }
     }
     case RAM_STATUS_UPDATE_FINISHED:
-        for(;;);
+        for (;;)
+            ;
         break;
     case RAM_STATUS_START_MU_INSTALL:
         if (HSE_GPR_3 & HSE_GPR_3_MU_READY) {
             bool firstTime = true;
-    for (;;) {
+            for (;;) {
                 hseSrvResponse_t cmd = HSE_Read();
                 switch (cmd) {
-                    case 0xAA55A55A: // Valid HSE Firmware in Passive Block
-                        if (firstTime) {
-                            firstTime = false;
-                            HSE_Write(0xF0F00F0F); // Install Firmware in Active Block
-                        } else {
-                            HSE_Write(0x5A5AA5A5); // switch to passive block
-                        }
-                        break;
-                    case 0xFF00F00F: // No Valid HSE FW in Passive Block
+                case 0xAA55A55A: // Valid HSE Firmware in Passive Block
+                    if (firstTime) {
+                        firstTime = false;
                         HSE_Write(0xF0F00F0F); // Install Firmware in Active Block
-                        break;
-                    case 0xDABABADA: // Block switching success
-                        Status_Data.firstBlock = false;
-                    case 0xDACACADA: // Full Mem HSE FW install success
-                        while (HSE_GPR_3 & HSE_GPR_3_MU_READY);
-                        Status_Data.status = RAM_STATUS_UTEST_OK;
-                        FunctionalReset();
-                        break;
-                    case 0xDADABABA: // Get HSE FW base address
-                        HSE_Write((uint32_t)&__HSE_BIN_START);
-                        break;
+                    } else {
+                        HSE_Write(0x5A5AA5A5); // switch to passive block
+                    }
+                    break;
+                case 0xFF00F00F:           // No Valid HSE FW in Passive Block
+                    HSE_Write(0xF0F00F0F); // Install Firmware in Active Block
+                    break;
+                case 0xDABABADA: // Block switching success
+                    Status_Data.firstBlock = false;
+                case 0xDACACADA: // Full Mem HSE FW install success
+                    while (HSE_GPR_3 & HSE_GPR_3_MU_READY)
+                        ;
+                    Status_Data.status = RAM_STATUS_UTEST_OK;
+                    FunctionalReset();
+                    break;
+                case 0xDADABABA: // Get HSE FW base address
+                    HSE_Write((uint32_t)&__HSE_BIN_START);
+                    break;
                 }
-        }
+            }
         } else {
             Status_Data.status = RAM_STATUS_UNKNWON;
             FunctionalReset();
-    }
+        }
         break;
     default:
         Status_Data.status = RAM_STATUS_UNKNWON;
         FunctionalReset();
         break;
-}
+    }
 
     return 0;
 }

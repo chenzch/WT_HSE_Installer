@@ -1,0 +1,16 @@
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 4
+SortIncludes: false
+UseTab: Never
+Standard: Cpp11
+ColumnLimit: 100
+ReflowComments: false
+AlignTrailingComments: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AllowShortFunctionsOnASingleLine: false
+AllowShortBlocksOnASingleLine: true
+MaxEmptyLinesToKeep: 1
+FixNamespaceComments: true
+AlignConsecutiveMacros: true
