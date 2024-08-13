@@ -112,7 +112,10 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-Debug_FLASH_*/
 .vscode/BROWSE.*
 *.gdb
 *.dump
+/Debug_ABSWAP_312/
+/Debug_ABSWAP_314/
+/Debug_FULLMEM_312/
+/Debug_FULLMEM_314/

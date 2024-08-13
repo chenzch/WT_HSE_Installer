@@ -11,7 +11,7 @@
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.PE.BUSERR" value="true"/>
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.PE.CHKERR" value="true"/>
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.PE.CORERESET" value="true"/>
-    <stringAttribute key="com.pemicro.debug.gdbjtag.pne.PE.DEVICE_NAME" value="NXP_S32K3xx_S32K314"/>
+    <stringAttribute key="com.pemicro.debug.gdbjtag.pne.PE.DEVICE_NAME" value="NXP_S32K3xx_S32K312"/>
     <stringAttribute key="com.pemicro.debug.gdbjtag.pne.PE.GDB_OPTIONS" value=""/>
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.PE.HARDERR" value="true"/>
     <intAttribute key="com.pemicro.debug.gdbjtag.pne.PE.HARDWARE_INTERFACE" value="0"/>
@@ -198,10 +198,10 @@
     <booleanAttribute key="org.eclipse.cdt.dsf.gdb.UPDATE_THREADLIST_ON_SUSPEND" value="false"/>
     <intAttribute key="org.eclipse.cdt.launch.ATTR_BUILD_BEFORE_LAUNCH_ATTR" value="2"/>
     <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
-    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug_FULLMEM_314/WT_HSE_Installer.elf"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug_FULLMEM_312/WT_HSE_Installer.elf"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="WT_HSE_Installer"/>
     <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
-    <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.983020014.1799025044"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.983020014.1799025044.1857764347"/>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
         <listEntry value="/WT_HSE_Installer"/>
     </listAttribute>

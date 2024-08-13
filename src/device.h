@@ -25,7 +25,13 @@
 #include <string.h>
 #include <cmsis_gcc.h>
 
+#if defined(S32K312)
+#include <S32K312.h>
+#endif
+
+#if defined(S32K314)
 #include <S32K314.h>
+#endif
 
 #include <hse_interface.h>
 

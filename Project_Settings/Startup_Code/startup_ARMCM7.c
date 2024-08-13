@@ -24,17 +24,7 @@
  * limitations under the License.
  */
 
-#if defined (ARMCM7)
-  #include "ARMCM7.h"
-#elif defined (ARMCM7_SP)
   #include "ARMCM7_SP.h"
-#elif defined (ARMCM7_DP)
-  #include "ARMCM7_DP.h"
-#else
-  #error device not specified!
-#endif
-
-#include "S32K314.h"
 
 /*----------------------------------------------------------------------------
   Exception / Interrupt Handler Function Prototype
@@ -44,10 +34,6 @@ typedef void( *pFunc )( void );
 /*----------------------------------------------------------------------------
   Peripheral MC_RGM base pointer
  *----------------------------------------------------------------------------*/
-
-#ifndef MC_RGM
-#define MC_RGM IP_MC_RGM
-#endif
 
 /*----------------------------------------------------------------------------
   External References
