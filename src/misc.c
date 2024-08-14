@@ -24,8 +24,8 @@
 
 void FunctionalReset(void) {
 
-    __asm("dsb");
-    __asm("isb");
+    __DSB();
+    __ISB();
 
     MC_ME.MODE_CONF.B.FUNC_RST = 1;
     MC_ME.MODE_UPD.B.MODE_UPD  = 1;

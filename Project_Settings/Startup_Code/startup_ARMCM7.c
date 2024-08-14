@@ -24,7 +24,7 @@
  * limitations under the License.
  */
 
-  #include "ARMCM7_SP.h"
+  #include "core_cm7.h"
 
 /*----------------------------------------------------------------------------
   Exception / Interrupt Handler Function Prototype
@@ -116,7 +116,7 @@ void __NAKED __NO_RETURN Reset_Handler(void)
   /* SP initialization is required for S32Debugger when program loaded into RAM by debugger*/
   __set_MSP((uint32_t)&__INITIAL_SP);
 
-  SystemInit();                             /* CMSIS System Initialization */
+  SCB->VTOR = (uint32_t) &__VECTOR_TABLE;   /* CMSIS System Initialization */
 
   __PROGRAM_START();                        /* Enter PreMain (C library entry point) */
 }
