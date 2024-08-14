@@ -38,7 +38,7 @@ bool checkHseFwFeatureFlagEnabled(void) {
     uint64_t hsefwfeatureflag = *(uint64_t *)UTEST_BASE_ADDR;
 
     //check the default value
-    if (0 != memcmp((void *)&hsefwfeatureflag, (void *)&default_val, 0x8U)) {
+    if (default_val != hsefwfeatureflag) {
         return true;
     } else {
         return false;

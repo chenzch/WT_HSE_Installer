@@ -21,8 +21,6 @@
 #define DEVICE_H (1)
 
 #include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
 #include <cmsis_gcc.h>
 
 #if defined(S32K312)
