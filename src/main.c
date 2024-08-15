@@ -140,12 +140,14 @@ int main(void) {
                 }
             }
         } else {
-            Status_Data.status = RAM_STATUS_UNKNWON;
+            Status_Data.status     = RAM_STATUS_UNKNWON;
+            Status_Data.firstBlock = true;
             FunctionalReset();
         }
         break;
     default:
-        Status_Data.status = RAM_STATUS_UNKNWON;
+        Status_Data.status     = RAM_STATUS_UNKNWON;
+        Status_Data.firstBlock = true;
         FunctionalReset();
         break;
     }
