@@ -109,6 +109,8 @@
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.ml.SPECIFY_IP" value="false"/>
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.ml.SPECIFY_NETWORK_CARD" value="false"/>
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.ml.STARTUP_USE_SWD" value="true"/>
+    <stringAttribute key="com.pemicro.debug.gdbjtag.pne.ml.SWO_BAUDRATE_SWITCH_MULTILINK_VALUE" value="-1.000000"/>
+    <stringAttribute key="com.pemicro.debug.gdbjtag.pne.ml.SWO_BAUDRATE_SWITCH_TARGET_VALUE" value="-1.000000"/>
     <stringAttribute key="com.pemicro.debug.gdbjtag.pne.otherRunCommands" value=""/>
     <intAttribute key="com.pemicro.debug.gdbjtag.pne.partitionParam" value="0"/>
     <booleanAttribute key="com.pemicro.debug.gdbjtag.pne.preserveMemory0" value="false"/>
@@ -208,4 +210,6 @@
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
         <listEntry value="4"/>
     </listAttribute>
+    <stringAttribute key="org.eclipse.dsf.launch.MEMORY_BLOCKS" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; standalone=&quot;no&quot;?&gt;&lt;memoryBlockExpressionList context=&quot;reserved-for-future-use&quot;/&gt;"/>
+    <stringAttribute key="process_factory_id" value="org.eclipse.cdt.dsf.gdb.GdbProcessFactory"/>
 </launchConfiguration>
