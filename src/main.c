@@ -66,10 +66,16 @@ int main(void) {
     case RAM_STATUS_FW_INIT_OK: {
         hseAttrFwVersion_t gHseFwVersion = {0U};
         hseAttrFwVersion_t CurrVersion   = HSE_FW_VERSION;
+        bool               isLowAddress  = false;
 
         if (HSE_SRV_RSP_OK != HSE_GetVersion(&gHseFwVersion)) {
             FunctionalReset();
         }
+
+        if (DCMDone()) {
+            isLowAddress = DCMLowAddress();
+        }
+
         if ((gHseFwVersion.socTypeId == CurrVersion.socTypeId) &&
             ((gHseFwVersion.majorVersion != CurrVersion.majorVersion) ||
              (gHseFwVersion.minorVersion != CurrVersion.minorVersion) ||
@@ -88,8 +94,12 @@ int main(void) {
                 Status_Data.status     = RAM_STATUS_UTEST_OK;
                 HSE_SwitchBlock();
                 FunctionalReset();
-            } else {
+            } else if (isLowAddress) {
                 Status_Data.status = RAM_STATUS_UPDATE_FINISHED;
+            } else {
+                Status_Data.status = RAM_STATUS_UTEST_OK;
+                HSE_SwitchBlock();
+                FunctionalReset();
             }
             break;
         case 0: // Full Mem

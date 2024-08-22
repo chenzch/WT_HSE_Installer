@@ -120,3 +120,11 @@ bool CheckSBAF(uint8_t socType) {
     }
     return ret;
 }
+
+bool DCMDone(void) {
+    return DCM.DCMSTAT.B.DCMDONE;
+}
+
+bool DCMLowAddress(void) {
+    return (DCM_DCMSTAT & (1 << 17)) ? false : true;
+}

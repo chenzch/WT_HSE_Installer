@@ -34,6 +34,10 @@ bool IsPOR(void);
 
 bool CheckSBAF(uint8_t socType);
 
+bool DCMDone(void);
+
+bool DCMLowAddress(void);
+
 extern uint32_t __SRAM_STATUS_START;
 
 #define RAM_STATUS_UNKNWON          (0x0)
@@ -47,6 +51,7 @@ typedef union {
     struct {
         uint32_t status;
         bool     firstBlock;
+        bool     lowAddress;
     } Data;
 } RAM_Status, *LPRAM_Status;
 
