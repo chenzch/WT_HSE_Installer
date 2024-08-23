@@ -27,6 +27,10 @@ bool MU_GetHseStatus(void) {
     return MU_0__MUB.FSR.B.F24;
 }
 
+bool MU_IsFormated(void) {
+    return MU_0__MUB.FSR.B.F25;
+}
+
 static hseSrvResponse_t GetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr);
 static hseSrvResponse_t HSE_Send(hseSrvDescriptor_t *pHseSrvDesc);
 

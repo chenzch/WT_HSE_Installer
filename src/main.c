@@ -119,13 +119,15 @@ int main(void) {
     }
     /* no break */
     case RAM_STATUS_UPDATE_FINISHED:
+        if (!MU_IsFormated()) {
 #if defined(FORMAT_AFTER_FINISH)
-        if (HSE_SRV_RSP_OK == HSE_Format()) {
+            if (HSE_SRV_RSP_OK == HSE_Format()) {
 #if defined(IMPORT_KEY_AFTER_FORMAT)
-            HSE_Import();
+                HSE_Import();
+#endif
+            }
 #endif
         }
-#endif
         for (;;)
             ;
         break;

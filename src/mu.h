@@ -43,6 +43,8 @@ bool HSE_Write(uint32_t Data);
 
 hseSrvResponse_t HSE_Read(void);
 
+bool MU_IsFormated(void);
+
 #if defined(FORMAT_AFTER_FINISH)
 
 hseSrvResponse_t HSE_Format(void);
