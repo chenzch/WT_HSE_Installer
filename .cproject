@@ -457,12 +457,32 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="WT_HSE_Installer.com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.343445859" name="Arm32 Executable" projectType="com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe"/>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="org.eclipse.embsys" parent_project="true" register_architecture="" register_board="---  none ---" register_chip="" register_core="" register_vendor=""/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug_FULLMEM_312">
+			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
+		</configuration>
+		<configuration configurationName="Debug_FULLMEM_314">
+			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
+		</configuration>
+		<configuration configurationName="Debug_ABSWAP_312">
+			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
+		</configuration>
+		<configuration configurationName="Debug_ABSWAP_314">
+			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.release.513634733;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.release.513634733.;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.9.2.tool.c.compiler.26974782;cdt.managedbuild.tool.gnu.c.compiler.input.980824537">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.ram.2058679878;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.ram.2058679878.;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.9.2.tool.c.compiler.920954916;cdt.managedbuild.tool.gnu.c.compiler.input.1974755221">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.983020014.143980073;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.983020014.143980073.;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.9.2.tool.c.compiler.2077309126;cdt.managedbuild.tool.gnu.c.compiler.input.1863943980">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.983020014;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.10.2.exe.debug.983020014.;com.nxp.s32ds.cle.arm.mbs.arm32.bare.gnu.9.2.tool.c.compiler.855069214;cdt.managedbuild.tool.gnu.c.compiler.input.1260141549">
@@ -472,8 +492,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="org.eclipse.embsys" parent_project="true" register_architecture="" register_board="---  none ---" register_chip="" register_core="" register_vendor=""/>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

@@ -101,3 +101,45 @@ hseSrvResponse_t HSE_SwitchBlock(void) {
     hseSrvDescriptor_t hseSrvDesc = {HSE_SRV_ID_ACTIVATE_PASSIVE_BLOCK};
     return HSE_Send(&hseSrvDesc);
 }
+
+#if defined(FORMAT_AFTER_FINISH)
+
+/* Start Copy from generate/src/Crypto_43_HSE_Cfg.c */
+
+/* Table containing NVM key catalog entries */
+const hseKeyGroupCfgEntry_t aHseNvmKeyCatalog[] =
+{
+    /* NvmKeyGroup_0 */
+    {(HSE_MU0_MASK), HSE_KEY_OWNER_CUST, HSE_KEY_TYPE_AES, 10U, 128U, {0U, 0U}},
+    /* Marker to end the key catalog */
+    {0U, 0U, 0U, 0U, 0U, {0U, 0U}}
+};
+
+/* Table containing RAM key catalog entries */
+const hseKeyGroupCfgEntry_t aHseRamKeyCatalog[] =
+{
+    /* RamKeyGroup_AES */
+    {(HSE_MU0_MASK), HSE_KEY_OWNER_ANY, HSE_KEY_TYPE_AES, 20U, 128U, {0U, 0U}},
+    /* Marker to end the key catalog */
+    {0U, 0U, 0U, 0U, 0U, {0U, 0U}}
+};
+
+/* End Copy from generate/src/Crypto_43_HSE_Cfg.c */
+
+hseSrvResponse_t HSE_Format(void) {
+    hseSrvDescriptor_t hseSrvDesc                            = {HSE_SRV_ID_FORMAT_KEY_CATALOGS};
+    hseSrvDesc.hseSrv.formatKeyCatalogsReq.pNvmKeyCatalogCfg = (uint32_t)&aHseNvmKeyCatalog[0];
+    hseSrvDesc.hseSrv.formatKeyCatalogsReq.pRamKeyCatalogCfg = (uint32_t)&aHseRamKeyCatalog[0];
+
+    return HSE_Send(&hseSrvDesc);
+}
+
+#endif
+
+#if defined(FORMAT_AFTER_FINISH) && defined(IMPORT_KEY_AFTER_FORMAT)
+
+hseSrvResponse_t HSE_Import(void) {
+    return HSE_SRV_RSP_OK;
+}
+
+#endif

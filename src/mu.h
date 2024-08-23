@@ -20,6 +20,12 @@
 #if !defined(MU_H)
 #define MU_H (1)
 
+// Format key after the HSE FW installation
+// #define FORMAT_AFTER_FINISH
+
+// Import key after Format
+// #define IMPORT_KEY_AFTER_FORMAT
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -36,6 +42,18 @@ hseSrvResponse_t HSE_SwitchBlock(void);
 bool HSE_Write(uint32_t Data);
 
 hseSrvResponse_t HSE_Read(void);
+
+#if defined(FORMAT_AFTER_FINISH)
+
+hseSrvResponse_t HSE_Format(void);
+
+#endif
+
+#if defined(FORMAT_AFTER_FINISH) && defined(IMPORT_KEY_AFTER_FORMAT)
+
+hseSrvResponse_t HSE_Import(void);
+
+#endif
 
 #if defined(__cplusplus)
 }

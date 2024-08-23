@@ -49,8 +49,9 @@ int main(void) {
             EnableHseFeature();
             FunctionalReset();
         }
+        /* no break */
     case RAM_STATUS_UTEST_OK: {
-        uint32_t WaitCount = 4000000U;
+        uint32_t WaitCount = 770000U;
         while (!MU_GetHseStatus()) {
             if (--WaitCount == 0) {
                 if (HSE_GPR_3 & HSE_GPR_3_FW_PRESENT) {
@@ -63,6 +64,7 @@ int main(void) {
         }
         Status_Data.status = RAM_STATUS_FW_INIT_OK;
     }
+    /* no break */
     case RAM_STATUS_FW_INIT_OK: {
         hseAttrFwVersion_t gHseFwVersion = {0U};
         hseAttrFwVersion_t CurrVersion   = HSE_FW_VERSION;
@@ -115,7 +117,15 @@ int main(void) {
             break;
         }
     }
+    /* no break */
     case RAM_STATUS_UPDATE_FINISHED:
+#if defined(FORMAT_AFTER_FINISH)
+        if (HSE_SRV_RSP_OK == HSE_Format()) {
+#if defined(IMPORT_KEY_AFTER_FORMAT)
+            HSE_Import();
+#endif
+        }
+#endif
         for (;;)
             ;
         break;
