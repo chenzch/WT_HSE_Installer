@@ -1,6 +1,6 @@
 /*****************************************************************************
  *
- * Copyright 2020-2022 NXP
+ * Copyright 2021-2022 NXP
  * All Rights Reserved
  *
  *****************************************************************************
@@ -25,15 +25,15 @@ __STACK_SIZE = 0x00001000;
 MEMORY
 {
   HSE_BINARY  (R)  : ORIGIN = 0x00400000, LENGTH = 0x00040000   /* Leave block 0 for HSE FW binary */
-  HSE_BINARYB (R)  : ORIGIN = 0x00600000, LENGTH = 0x00040000   /* Leave block 0 on passive partition for HSE FW binary */
+  HSE_BINARYB (R)  : ORIGIN = 0x00480000, LENGTH = 0x00040000
   DFLASH      (RX) : ORIGIN = 0x10000000, LENGTH = 0x2000
   SRAM        (RW) : ORIGIN = 0x20400000, LENGTH = 0x2000
   SRAM_STATUS (RW) : ORIGIN = 0x20402000, LENGTH = 0x10
 }
 
 TARGET(binary) /* specify the file format of binary file */
-INPUT (..\HSE_FW_S32K344_0_2_40_0\hse_ab_swap\s32k344_hse_fw_1.5.0_2.40.0_pb230807.bin.pink)
-INPUT (.\..\HSE_FW_S32K344_0_2_40_0\hse_ab_swap\s32k344_hse_fw_1.5.0_2.40.0_pb230807.bin.pink)
+INPUT (..\HSE_FW_S32K311_0_2_40_0\hse_ab_swap\s32k311_hse_fw_1.12.0_2.40.0_pb230730.bin.pink)
+INPUT (.\..\HSE_FW_S32K311_0_2_40_0\hse_ab_swap\s32k311_hse_fw_1.12.0_2.40.0_pb230730.bin.pink)
 OUTPUT_FORMAT(default) /* restore the out file format */
 
 /* Linker script to place sections and symbol values. Should be used together
@@ -70,7 +70,7 @@ SECTIONS
 	.hse_bin :
   	{
   		. = ALIGN (0x4);
-  		..\HSE_FW_S32K344_0_2_40_0\hse_ab_swap\s32k344_hse_fw_1.5.0_2.40.0_pb230807.bin.pink (.data)
+  		..\HSE_FW_S32K311_0_2_40_0\hse_ab_swap\s32k311_hse_fw_1.12.0_2.40.0_pb230730.bin.pink (.data)
   		. = ALIGN (0x4);
   	} > HSE_BINARY
 
@@ -79,7 +79,7 @@ SECTIONS
   .hse_binb :
   	{
   		. = ALIGN (0x4);
-  		.\..\HSE_FW_S32K344_0_2_40_0\hse_ab_swap\s32k344_hse_fw_1.5.0_2.40.0_pb230807.bin.pink (.data)
+  		.\..\HSE_FW_S32K311_0_2_40_0\hse_ab_swap\s32k311_hse_fw_1.12.0_2.40.0_pb230730.bin.pink (.data)
   		. = ALIGN (0x4);
   	} > HSE_BINARYB
 
@@ -183,7 +183,6 @@ SECTIONS
   } > DFLASH
 
   __etext = ALIGN(8);
-
 
   /* Due ECC initialization sequence __data_start__ and __data_end__ should be aligned on 8 bytes */
   .data : AT (__etext)

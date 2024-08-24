@@ -31,6 +31,10 @@
 #include <S32K314.h>
 #endif
 
+#if defined(S32K311)
+#include <S32K311.h>
+#endif
+
 #include <hse_interface.h>
 
 #endif // DEVICE_H

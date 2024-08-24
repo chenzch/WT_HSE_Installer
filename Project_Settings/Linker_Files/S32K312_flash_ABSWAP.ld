@@ -179,7 +179,6 @@ SECTIONS
   {
       . = ALIGN (0x4);
       __SBAF_BIN_START = .;
-      . = . + 0x10; /* Dummy SBAF */
       . = ALIGN (0x4);
   } > DFLASH
 
