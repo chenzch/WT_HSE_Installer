@@ -33,13 +33,17 @@ hseSrvResponse_t HSE_GetVersion(hseAttrFwVersion_t *pHseFwVersion);
 
 hseSrvResponse_t HSE_SwitchBlock(void);
 
+hseSrvResponse_t HSE_EnableStoreRamToFlash(bool Enable);
+
+hseSrvResponse_t HSE_FlushKeys(void);
+
 bool HSE_Write(uint32_t Data);
 
 hseSrvResponse_t HSE_Read(void);
 
 bool MU_IsFormated(void);
 
-hseSrvResponse_t HSE_Format(void);
+hseSrvResponse_t HSE_Format(uint32_t pNvmFormat, uint32_t pRamFormat);
 
 hseSrvResponse_t HSE_Import(void);
 

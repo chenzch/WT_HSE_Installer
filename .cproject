@@ -687,6 +687,9 @@
 	<storageModule moduleId="org.eclipse.embsys" parent_project="true" register_architecture="" register_board="---  none ---" register_chip="" register_core="" register_vendor=""/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug_FULLMEM_311">
+			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
+		</configuration>
 		<configuration configurationName="Debug_FULLMEM_312">
 			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
 		</configuration>
@@ -694,6 +697,9 @@
 			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
 		</configuration>
 		<configuration configurationName="Debug_ABSWAP_312">
+			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
+		</configuration>
+		<configuration configurationName="Debug_ABSWAP_311">
 			<resource resourceType="PROJECT" workspacePath="/WT_HSE_Installer"/>
 		</configuration>
 		<configuration configurationName="Debug_ABSWAP_314">

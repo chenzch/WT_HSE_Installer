@@ -30,6 +30,7 @@
 #include "device.h"
 #include "misc.h"
 #include "mu.h"
+#include "keycfg.h"
 
 extern uint32_t __HSE_BIN_START;
 
@@ -119,9 +120,10 @@ int main(void) {
     }
     /* no break */
     case RAM_STATUS_UPDATE_FINISHED:
-        if (HSE_SRV_RSP_OK == HSE_Format()) {
-            HSE_Import();
-        }
+        if ((HSE_SRV_RSP_OK == HSE_EnableStoreRamToFlash(true)) &&
+            (HSE_SRV_RSP_OK ==
+             HSE_Format((uint32_t)&aHseNvmKeyCatalog[0], (uint32_t)&aHseRamKeyCatalog[0])) &&
+            (HSE_SRV_RSP_OK == HSE_Import()) && (HSE_SRV_RSP_OK == HSE_FlushKeys())) {}
         for (;;)
             ;
         break;

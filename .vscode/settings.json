@@ -1,0 +1,8 @@
+{
+    "S32DSROOT": "D:/NXP/S32DS.3.5",
+    "files.associations": {
+        "*.bin": "hex",
+        "*.h": "c",
+        "*.c": "c"
+    }
+}
