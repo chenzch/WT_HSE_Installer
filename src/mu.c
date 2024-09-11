@@ -32,8 +32,9 @@ bool MU_IsFormated(void) {
 }
 
 static hseSrvResponse_t GetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr);
-static hseSrvResponse_t SetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr);
-static hseSrvResponse_t HSE_Send(hseSrvDescriptor_t *pHseSrvDesc);
+static hseSrvResponse_t HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc);
+static hseSrvResponse_t HSE_Read_Impl(uint8_t Channel);
+static bool __attribute__((section (".ramcode"))) HSE_Write_Impl (uint8_t Channel, uint32_t Data);
 
 hseSrvResponse_t TrigUpdateHSEFW(void) {
 
@@ -41,7 +42,7 @@ hseSrvResponse_t TrigUpdateHSEFW(void) {
     hseSrvDesc.hseSrv.firmwareUpdateReq.accessMode = HSE_ACCESS_MODE_ONE_PASS;
     hseSrvDesc.hseSrv.firmwareUpdateReq.pInFwFile  = (uint32_t)&__HSE_BIN_START;
 
-    return HSE_Send(&hseSrvDesc);
+    return HSE_Send(0, &hseSrvDesc);
 }
 
 hseSrvResponse_t TrigUpdateSBAF(void) {
@@ -50,38 +51,22 @@ hseSrvResponse_t TrigUpdateSBAF(void) {
     hseSrvDesc.hseSrv.firmwareUpdateReq.accessMode = HSE_ACCESS_MODE_ONE_PASS;
     hseSrvDesc.hseSrv.firmwareUpdateReq.pInFwFile  = (uint32_t)&__SBAF_BIN_START;
 
-    return HSE_Send(&hseSrvDesc);
+    return HSE_Send(0, &hseSrvDesc);
 }
 
 hseSrvResponse_t HSE_GetVersion(hseAttrFwVersion_t *pHseFwVersion) {
     return GetAttr(HSE_FW_VERSION_ATTR_ID, sizeof(hseAttrFwVersion_t), pHseFwVersion);
 }
 
-hseSrvResponse_t HSE_EnableStoreRamToFlash(bool Enable) {
-    hsePublishNvmKeystoreRamtToFlash_t value;
-    if (Enable) {
-        value = HSE_CFG_YES;
-    } else {
-        value = HSE_CFG_NO;
-    }
-    return SetAttr(HSE_ENABLE_PUBLISH_KEY_STORE_RAM_TO_FLASH_ATTR_ID,
-                   sizeof(hsePublishNvmKeystoreRamtToFlash_t), &value);
-}
-
-hseSrvResponse_t HSE_FlushKeys(void) {
-    hseSrvDescriptor_t hseSrvDesc = {HSE_SRV_ID_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH};
-    return HSE_Send(&hseSrvDesc);
-}
-
-bool HSE_Write(uint32_t Data) {
+static bool __attribute__((section (".ramcode"))) HSE_Write_Impl (uint8_t Channel, uint32_t Data) {
     uint32_t u32TimeOutCount;
 
-    MU_0__MUB.TR[0].B.TR_DATA = Data;
+    MU_0__MUB.TR[Channel].B.TR_DATA = Data;
 
     u32TimeOutCount = -1UL;
 
     /* Wait until HSE process the request and send the response */
-    while ((0UL < u32TimeOutCount--) && (0 == MU_0__MUB.RSR.B.RF0))
+    while ((0UL < u32TimeOutCount--) && (0 == (MU_0__MUB.RSR.R & (1 << Channel))))
         ;
 
     /* Response received if TIMEOUT did not occur */
@@ -92,18 +77,26 @@ bool HSE_Write(uint32_t Data) {
     }
 }
 
-hseSrvResponse_t HSE_Read(void) {
+bool HSE_Write (uint32_t Data) {
+    return HSE_Write_Impl(0, Data);
+}
+
+static hseSrvResponse_t HSE_Read_Impl(uint8_t Channel) {
     /* Get HSE response */
-    hseSrvResponse_t u32HseMuResponse = MU_0__MUB.RR[0].B.RR_DATA;
-    while (MU_0__MUB.FSR.B.F0)
+    hseSrvResponse_t u32HseMuResponse = MU_0__MUB.RR[Channel].B.RR_DATA;
+    while (MU_0__MUB.FSR.R & (1 << Channel))
         ;
     return u32HseMuResponse;
 }
 
-hseSrvResponse_t HSE_Send(hseSrvDescriptor_t *pHseSrvDesc) {
+hseSrvResponse_t HSE_Read(void) {
+    return HSE_Read_Impl(0);
+}
+
+hseSrvResponse_t HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc) {
     /* Response received if TIMEOUT did not occur */
-    if (HSE_Write((uint32_t)pHseSrvDesc)) {
-        return HSE_Read();
+    if (HSE_Write_Impl(Channel, (uint32_t)pHseSrvDesc)) {
+        return HSE_Read_Impl(Channel);
     } else {
         return HSE_SRV_RSP_GENERAL_ERROR;
     }
@@ -115,21 +108,12 @@ hseSrvResponse_t GetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr) {
     hseSrvDesc.hseSrv.getAttrReq.attrLen = attrLen;
     hseSrvDesc.hseSrv.getAttrReq.pAttr   = (HOST_ADDR)pAttr;
 
-    return HSE_Send(&hseSrvDesc);
-}
-
-hseSrvResponse_t SetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr) {
-    hseSrvDescriptor_t hseSrvDesc        = {HSE_SRV_ID_SET_ATTR};
-    hseSrvDesc.hseSrv.setAttrReq.attrId  = attrId;
-    hseSrvDesc.hseSrv.setAttrReq.attrLen = attrLen;
-    hseSrvDesc.hseSrv.setAttrReq.pAttr   = (HOST_ADDR)pAttr;
-
-    return HSE_Send(&hseSrvDesc);
+    return HSE_Send(0, &hseSrvDesc);
 }
 
 hseSrvResponse_t HSE_SwitchBlock(void) {
     hseSrvDescriptor_t hseSrvDesc = {HSE_SRV_ID_ACTIVATE_PASSIVE_BLOCK};
-    return HSE_Send(&hseSrvDesc);
+    return HSE_Send(0, &hseSrvDesc);
 }
 
 hseSrvResponse_t HSE_Format(uint32_t pNvmFormat, uint32_t pRamFormat) {
@@ -140,7 +124,7 @@ hseSrvResponse_t HSE_Format(uint32_t pNvmFormat, uint32_t pRamFormat) {
         hseSrvDescriptor_t hseSrvDesc                            = {HSE_SRV_ID_FORMAT_KEY_CATALOGS};
         hseSrvDesc.hseSrv.formatKeyCatalogsReq.pNvmKeyCatalogCfg = pNvmFormat;
         hseSrvDesc.hseSrv.formatKeyCatalogsReq.pRamKeyCatalogCfg = pRamFormat;
-        return HSE_Send(&hseSrvDesc);
+        return HSE_Send(1, &hseSrvDesc);
     }
 }
 

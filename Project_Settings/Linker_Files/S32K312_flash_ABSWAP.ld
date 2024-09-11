@@ -26,9 +26,10 @@ MEMORY
 {
   HSE_BINARY  (R)  : ORIGIN = 0x00400000, LENGTH = 0x00040000   /* Leave block 0 for HSE FW binary */
   HSE_BINARYB (R)  : ORIGIN = 0x00500000, LENGTH = 0x00040000
-  DFLASH      (RX) : ORIGIN = 0x10000000, LENGTH = 0x2000
-  SRAM        (RW) : ORIGIN = 0x20400000, LENGTH = 0x2000
-  SRAM_STATUS (RW) : ORIGIN = 0x20402000, LENGTH = 0x10
+  DFLASH      (RX) : ORIGIN = 0x10000000, LENGTH = 0x00002000
+  SRAM        (RW) : ORIGIN = 0x20400000, LENGTH = 0x00002000
+  SRAM_STATUS (RW) : ORIGIN = 0x20402000, LENGTH = 0x00000010
+  ITCM        (RWX): ORIGIN = 0x00000000, LENGTH = 0x00008000
 }
 
 TARGET(binary) /* specify the file format of binary file */
@@ -142,6 +143,9 @@ SECTIONS
     QUAD (__StackLimit)
     QUAD ((__StackTop - __StackLimit) / 8)
 
+    QUAD (__itcm_start__)
+    QUAD ((__itcm_end__ - __itcm_start__) / 8)
+
     __ecc_table_end__ = .;
   } > DFLASH
 
@@ -154,12 +158,10 @@ SECTIONS
     LONG (__data_start__)
     LONG ((__data_end__ - __data_start__) / 4)
 
-    /* Add each additional data section here */
-    /*
-      LONG (__etext2)
-      LONG (__data2_start__)
-      LONG ((__data2_end__ - __data2_start__) / 4)
-    */
+    LONG (ramcode_flash)
+    LONG (__itcm_start__)
+    LONG ((__itcm_end__ - __itcm_start__) / 4)
+
     __copy_table_end__ = .;
   } > DFLASH
 
@@ -215,10 +217,25 @@ SECTIONS
 
     KEEP(*(.jcr*))
     . = ALIGN(8);
+    KEEP(*(.ramdata))
+    . = ALIGN(8);
     /* All data end */
     __data_end__ = .;
 
   } > SRAM
+
+  ramcode_flash = __etext + __data_end__ - __data_start__;
+
+  .ramcode : AT (ramcode_flash)
+  {
+    . = ALIGN(8);
+    __itcm_start__ = .;
+
+    *(.ramcode)
+
+    . = ALIGN(8);
+    __itcm_end__ = .;
+  } > ITCM
 
   /* Due ECC initialization sequence __bss_start__ and __bss_end__ should be aligned on 8 bytes */
   .bss :

@@ -21,7 +21,7 @@
 #include <hse_interface.h>
 
 // clang-format off
-
+#pragma GCC section rodata ".ramdata"
 /* Start Copy from generate/src/Crypto_43_HSE_Cfg.c */
 
 /* Table containing NVM key catalog entries */
