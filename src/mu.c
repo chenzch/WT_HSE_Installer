@@ -19,6 +19,7 @@
 //---------------------------------------------------------------------------------------------------------------------
 #include "device.h"
 #include "mu.h"
+#include "keycfg.h"
 
 extern uint32_t __HSE_BIN_START;
 extern uint32_t __SBAF_BIN_START;
@@ -34,7 +35,7 @@ bool MU_IsFormated(void) {
 static hseSrvResponse_t GetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr);
 static hseSrvResponse_t HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc);
 static hseSrvResponse_t HSE_Read_Impl(uint8_t Channel);
-static bool __attribute__((section (".ramcode"))) HSE_Write_Impl (uint8_t Channel, uint32_t Data);
+static bool __attribute__((section(".ramcode"))) HSE_Write_Impl(uint8_t Channel, uint32_t Data);
 
 hseSrvResponse_t TrigUpdateHSEFW(void) {
 
@@ -58,7 +59,7 @@ hseSrvResponse_t HSE_GetVersion(hseAttrFwVersion_t *pHseFwVersion) {
     return GetAttr(HSE_FW_VERSION_ATTR_ID, sizeof(hseAttrFwVersion_t), pHseFwVersion);
 }
 
-static bool __attribute__((section (".ramcode"))) HSE_Write_Impl (uint8_t Channel, uint32_t Data) {
+static bool __attribute__((section(".ramcode"))) HSE_Write_Impl(uint8_t Channel, uint32_t Data) {
     uint32_t u32TimeOutCount;
 
     MU_0__MUB.TR[Channel].B.TR_DATA = Data;
@@ -77,7 +78,7 @@ static bool __attribute__((section (".ramcode"))) HSE_Write_Impl (uint8_t Channe
     }
 }
 
-bool HSE_Write (uint32_t Data) {
+bool HSE_Write(uint32_t Data) {
     return HSE_Write_Impl(0, Data);
 }
 
@@ -116,7 +117,17 @@ hseSrvResponse_t HSE_SwitchBlock(void) {
     return HSE_Send(0, &hseSrvDesc);
 }
 
-hseSrvResponse_t HSE_Format(uint32_t pNvmFormat, uint32_t pRamFormat) {
+/**
+ * Format key after HSE install
+ */
+
+/* #define FORMAT_KEY_AFTER_INSTALL */
+
+hseSrvResponse_t HSE_Format(void) {
+
+#if defined(FORMAT_KEY_AFTER_INSTALL)
+    uint32_t pNvmFormat = (uint32_t)&aHseNvmKeyCatalog[0];
+    uint32_t pRamFormat = (uint32_t)&aHseRamKeyCatalog[0];
 
     if ((0 == pNvmFormat) && (0 == pRamFormat)) {
         return HSE_SRV_RSP_INVALID_PARAM;
@@ -126,15 +137,21 @@ hseSrvResponse_t HSE_Format(uint32_t pNvmFormat, uint32_t pRamFormat) {
         hseSrvDesc.hseSrv.formatKeyCatalogsReq.pRamKeyCatalogCfg = pRamFormat;
         return HSE_Send(1, &hseSrvDesc);
     }
+#else
+    return HSE_SRV_RSP_NOT_SUPPORTED;
+#endif
 }
 
-// Import key after Format
-// #define IMPORT_KEY_AFTER_FORMAT
+/**
+ * Import key after Format
+ */
+
+/* #define IMPORT_KEY_AFTER_FORMAT */
 
 hseSrvResponse_t HSE_Import(void) {
-#if defined(IMPORT_KEY_AFTER_FORMAT)
+#if defined(FORMAT_KEY_AFTER_INSTALL) && defined(IMPORT_KEY_AFTER_FORMAT)
     return HSE_SRV_RSP_OK;
 #else
-    return HSE_SRV_RSP_OK;
+    return HSE_SRV_RSP_NOT_SUPPORTED;
 #endif
 }

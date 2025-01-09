@@ -30,7 +30,6 @@
 #include "device.h"
 #include "misc.h"
 #include "mu.h"
-#include "keycfg.h"
 
 extern uint32_t __HSE_BIN_START;
 
@@ -44,6 +43,7 @@ int main(void) {
 
     switch (Status_Data.status) {
     case RAM_STATUS_UNKNWON:
+    Restart:
         if (checkHseFwFeatureFlagEnabled()) {
             Status_Data.status = RAM_STATUS_UTEST_OK;
         } else {
@@ -105,8 +105,8 @@ int main(void) {
                 FunctionalReset();
             }
             break;
-        case 0: // Full Mem
-            // Full Mem, Check and Update SBAF
+        case 0: // Full Memory
+            // Full Memory, Check and Update SBAF
             if (CheckSBAF(gHseFwVersion.socTypeId)) {
                 TrigUpdateSBAF();
             }
@@ -120,9 +120,7 @@ int main(void) {
     }
     /* no break */
     case RAM_STATUS_UPDATE_FINISHED:
-        if ((HSE_SRV_RSP_OK ==
-             HSE_Format((uint32_t)&aHseNvmKeyCatalog[0], (uint32_t)&aHseRamKeyCatalog[0])) &&
-            (HSE_SRV_RSP_OK == HSE_Import())) {}
+        if ((HSE_SRV_RSP_OK == HSE_Format()) && (HSE_SRV_RSP_OK == HSE_Import())) {}
         for (;;)
             ;
         break;
@@ -145,6 +143,7 @@ int main(void) {
                     break;
                 case 0xDABABADA: // Block switching success
                     Status_Data.firstBlock = false;
+                    /* no break */
                 case 0xDACACADA: // Full Mem HSE FW install success
                     while (HSE_GPR_3 & HSE_GPR_3_MU_READY)
                         ;
@@ -165,8 +164,7 @@ int main(void) {
     default:
         Status_Data.status     = RAM_STATUS_UNKNWON;
         Status_Data.firstBlock = true;
-        FunctionalReset();
-        break;
+        goto Restart;
     }
 
     return 0;

@@ -39,7 +39,7 @@ hseSrvResponse_t HSE_Read(void);
 
 bool MU_IsFormated(void);
 
-hseSrvResponse_t HSE_Format(uint32_t pNvmFormat, uint32_t pRamFormat);
+hseSrvResponse_t HSE_Format(void);
 
 hseSrvResponse_t HSE_Import(void);
 
