@@ -34,7 +34,13 @@
 extern uint32_t __HSE_BIN_START;
 
 int main(void) {
+
+    MC_RGM.FREC.B.FREC = 0xF;
+    MC_RGM.FRET.B.FRET = 0x0;
+    MC_RGM.DRET.B.DRET = 0x0;
+
     if (IsPOR()) {
+Restart:
         ((LPRAM_Status)&__SRAM_STATUS_START)->raw[0] = 0;
         ((LPRAM_Status)&__SRAM_STATUS_START)->raw[1] = 0;
         Status_Data.status                           = RAM_STATUS_UNKNWON;
@@ -43,7 +49,6 @@ int main(void) {
 
     switch (Status_Data.status) {
     case RAM_STATUS_UNKNWON:
-    Restart:
         if (checkHseFwFeatureFlagEnabled()) {
             Status_Data.status = RAM_STATUS_UTEST_OK;
         } else {
@@ -82,7 +87,8 @@ int main(void) {
         if ((gHseFwVersion.socTypeId == CurrVersion.socTypeId) &&
             ((gHseFwVersion.majorVersion != CurrVersion.majorVersion) ||
              (gHseFwVersion.minorVersion != CurrVersion.minorVersion) ||
-             (gHseFwVersion.patchVersion != CurrVersion.patchVersion))) {
+             (gHseFwVersion.patchVersion != CurrVersion.patchVersion) ||
+			 (gHseFwVersion.reserved != CurrVersion.reserved))) {
             if (HSE_SRV_RSP_OK != TrigUpdateHSEFW()) {
                 // Update failed force reboot
                 FunctionalReset();
@@ -91,17 +97,13 @@ int main(void) {
 
         switch (gHseFwVersion.reserved) {
         case 1: // AB_SWAP
-            if (Status_Data.firstBlock) {
-                // Updated in current block, switch to another block
+            if (!Status_Data.firstBlock && isLowAddress) {
+                Status_Data.status = RAM_STATUS_UPDATE_FINISHED;
+            } else {
                 Status_Data.firstBlock = false;
                 Status_Data.status     = RAM_STATUS_UTEST_OK;
                 HSE_SwitchBlock();
-                FunctionalReset();
-            } else if (isLowAddress) {
-                Status_Data.status = RAM_STATUS_UPDATE_FINISHED;
-            } else {
-                Status_Data.status = RAM_STATUS_UTEST_OK;
-                HSE_SwitchBlock();
+                WaitForHSEDone();
                 FunctionalReset();
             }
             break;
@@ -162,8 +164,6 @@ int main(void) {
         }
         break;
     default:
-        Status_Data.status     = RAM_STATUS_UNKNWON;
-        Status_Data.firstBlock = true;
         goto Restart;
     }
 

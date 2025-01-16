@@ -38,6 +38,8 @@ bool DCMDone(void);
 
 bool DCMLowAddress(void);
 
+void WaitForHSEDone(void);
+
 extern uint32_t __SRAM_STATUS_START;
 
 #define RAM_STATUS_UNKNWON          (0x0)
@@ -59,6 +61,8 @@ typedef union {
 #define HSE_GPR_3            (*((uint32_t *)0x4039C028))
 #define HSE_GPR_3_FW_PRESENT (0x1)
 #define HSE_GPR_3_MU_READY   (0x2)
+#define HSE_GPR_3_ERASE      (0x003F0000)
+#define HSE_GPR_3_ACCESS     (0x3F000000)
 
 #if defined(__cplusplus)
 }

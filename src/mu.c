@@ -82,7 +82,7 @@ bool HSE_Write(uint32_t Data) {
     return HSE_Write_Impl(0, Data);
 }
 
-static hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Read_Impl(uint8_t Channel) {
+static hseSrvResponse_t HSE_Read_Impl(uint8_t Channel) {
     /* Get HSE response */
     hseSrvResponse_t u32HseMuResponse = MU_0__MUB.RR[Channel].B.RR_DATA;
     while (MU_0__MUB.FSR.R & (1 << Channel))
@@ -94,7 +94,7 @@ hseSrvResponse_t HSE_Read(void) {
     return HSE_Read_Impl(0);
 }
 
-hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc) {
+hseSrvResponse_t HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc) {
     /* Response received if TIMEOUT did not occur */
     if (HSE_Write_Impl(Channel, (uint32_t)pHseSrvDesc)) {
         return HSE_Read_Impl(Channel);
