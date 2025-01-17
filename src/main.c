@@ -40,7 +40,7 @@ int main(void) {
     MC_RGM.DRET.B.DRET = 0x0;
 
     if (IsPOR()) {
-Restart:
+    Restart:
         ((LPRAM_Status)&__SRAM_STATUS_START)->raw[0] = 0;
         ((LPRAM_Status)&__SRAM_STATUS_START)->raw[1] = 0;
         Status_Data.status                           = RAM_STATUS_UNKNWON;
@@ -84,16 +84,16 @@ Restart:
             isLowAddress = DCMLowAddress();
         }
 
-        if ((gHseFwVersion.socTypeId == CurrVersion.socTypeId) &&
-            ((gHseFwVersion.majorVersion != CurrVersion.majorVersion) ||
-             (gHseFwVersion.minorVersion != CurrVersion.minorVersion) ||
-             (gHseFwVersion.patchVersion != CurrVersion.patchVersion) ||
-			 (gHseFwVersion.reserved != CurrVersion.reserved))) {
-            if (HSE_SRV_RSP_OK != TrigUpdateHSEFW()) {
-                // Update failed force reboot
-                FunctionalReset();
-            }
-        }
+         if ((gHseFwVersion.socTypeId == CurrVersion.socTypeId) &&
+             ((gHseFwVersion.majorVersion != CurrVersion.majorVersion) ||
+              (gHseFwVersion.minorVersion != CurrVersion.minorVersion) ||
+              (gHseFwVersion.patchVersion != CurrVersion.patchVersion) ||
+              ((gHseFwVersion.reserved == 0) && (CurrVersion.reserved == 1)))) {
+             if (HSE_SRV_RSP_OK != TrigUpdateHSEFW()) {
+                 // Update failed force reboot
+                 FunctionalReset();
+             }
+         }
 
         switch (gHseFwVersion.reserved) {
         case 1: // AB_SWAP
@@ -149,7 +149,7 @@ Restart:
                 case 0xDACACADA: // Full Mem HSE FW install success
                     while (HSE_GPR_3 & HSE_GPR_3_MU_READY)
                         ;
-                    Status_Data.status = RAM_STATUS_UTEST_OK;
+                    Status_Data.status = RAM_STATUS_WAIT_FOR_FW;
                     FunctionalReset();
                     break;
                 case 0xDADABABA: // Get HSE FW base address
@@ -163,6 +163,11 @@ Restart:
             FunctionalReset();
         }
         break;
+    case RAM_STATUS_WAIT_FOR_FW:
+        while (0 == (HSE_GPR_3 & HSE_GPR_3_FW_PRESENT)) {
+            __NOP();
+        }
+        /* no break */
     default:
         goto Restart;
     }

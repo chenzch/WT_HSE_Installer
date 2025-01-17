@@ -47,6 +47,7 @@ extern uint32_t __SRAM_STATUS_START;
 #define RAM_STATUS_FW_INIT_OK       (0x2)
 #define RAM_STATUS_START_MU_INSTALL (0x3)
 #define RAM_STATUS_UPDATE_FINISHED  (0x4)
+#define RAM_STATUS_WAIT_FOR_FW      (0x5)
 
 typedef union {
     uint64_t raw[2];
