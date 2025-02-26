@@ -45,6 +45,7 @@ int main(void) {
         ((LPRAM_Status)&__SRAM_STATUS_START)->raw[1] = 0;
         Status_Data.status                           = RAM_STATUS_UNKNWON;
         Status_Data.firstBlock                       = true;
+        Status_Data.firstInstall                     = false;
     }
 
     switch (Status_Data.status) {
@@ -52,6 +53,7 @@ int main(void) {
         if (checkHseFwFeatureFlagEnabled()) {
             Status_Data.status = RAM_STATUS_UTEST_OK;
         } else {
+            Status_Data.firstInstall = true;
             EnableHseFeature();
             FunctionalReset();
         }
@@ -97,7 +99,7 @@ int main(void) {
 
         switch (gHseFwVersion.reserved) {
         case 1: // AB_SWAP
-            if (!Status_Data.firstBlock && isLowAddress) {
+            if (Status_Data.firstInstall || (!Status_Data.firstBlock && isLowAddress)) {
                 Status_Data.status = RAM_STATUS_UPDATE_FINISHED;
             } else {
                 Status_Data.firstBlock = false;

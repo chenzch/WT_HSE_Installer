@@ -54,6 +54,7 @@ typedef union {
     struct {
         uint32_t status;
         bool     firstBlock;
+        bool     firstInstall;
     } Data;
 } RAM_Status, *LPRAM_Status;
 
