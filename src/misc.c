@@ -27,13 +27,6 @@ void FunctionalReset(void) {
     __DSB();
     __ISB();
 
-   {
-   	register uint32_t Count = 100000UL;
-   	while (--Count) {
-       	__NOP();
-   	}
-   }
-
     MC_ME.MODE_CONF.B.FUNC_RST = 1;
     MC_ME.MODE_UPD.B.MODE_UPD  = 1;
     MC_ME.CTL_KEY.B.KEY        = (uint32_t)0x00005AF0U;

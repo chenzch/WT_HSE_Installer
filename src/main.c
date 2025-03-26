@@ -86,16 +86,16 @@ int main(void) {
             isLowAddress = DCMLowAddress();
         }
 
-         if ((gHseFwVersion.socTypeId == CurrVersion.socTypeId) &&
-             ((gHseFwVersion.majorVersion != CurrVersion.majorVersion) ||
-              (gHseFwVersion.minorVersion != CurrVersion.minorVersion) ||
-              (gHseFwVersion.patchVersion != CurrVersion.patchVersion) ||
-              ((gHseFwVersion.reserved == 0) && (CurrVersion.reserved == 1)))) {
-             if (HSE_SRV_RSP_OK != TrigUpdateHSEFW()) {
-                 // Update failed force reboot
-                 FunctionalReset();
-             }
-         }
+        if ((gHseFwVersion.socTypeId == CurrVersion.socTypeId) &&
+            ((gHseFwVersion.majorVersion != CurrVersion.majorVersion) ||
+             (gHseFwVersion.minorVersion != CurrVersion.minorVersion) ||
+             (gHseFwVersion.patchVersion != CurrVersion.patchVersion) ||
+             ((gHseFwVersion.reserved == 0) && (CurrVersion.reserved == 1)))) {
+            if (HSE_SRV_RSP_OK != TrigUpdateHSEFW()) {
+                // Update failed force reboot
+                FunctionalReset();
+            }
+        }
 
         switch (gHseFwVersion.reserved) {
         case 1: // AB_SWAP
@@ -105,8 +105,6 @@ int main(void) {
                 Status_Data.firstBlock = false;
                 Status_Data.status     = RAM_STATUS_UTEST_OK;
                 HSE_SwitchBlock();
-                WaitForHSEDone();
-                FunctionalReset();
             }
             break;
         case 0: // Full Memory
@@ -173,6 +171,9 @@ int main(void) {
     default:
         goto Restart;
     }
+
+    for (;;)
+        ;
 
     return 0;
 }

@@ -33,8 +33,8 @@ bool MU_IsFormated(void) {
 }
 
 static hseSrvResponse_t GetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr);
-static hseSrvResponse_t HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc);
-static hseSrvResponse_t HSE_Read_Impl(uint8_t Channel);
+static hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc);
+static hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Read_Impl(uint8_t Channel);
 static bool __attribute__((section(".ramcode"))) HSE_Write_Impl(uint8_t Channel, uint32_t Data);
 
 hseSrvResponse_t TrigUpdateHSEFW(void) {
@@ -82,7 +82,7 @@ bool HSE_Write(uint32_t Data) {
     return HSE_Write_Impl(0, Data);
 }
 
-static hseSrvResponse_t HSE_Read_Impl(uint8_t Channel) {
+static hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Read_Impl(uint8_t Channel) {
     /* Get HSE response */
     hseSrvResponse_t u32HseMuResponse = MU_0__MUB.RR[Channel].B.RR_DATA;
     while (MU_0__MUB.FSR.R & (1 << Channel))
@@ -94,7 +94,7 @@ hseSrvResponse_t HSE_Read(void) {
     return HSE_Read_Impl(0);
 }
 
-hseSrvResponse_t HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc) {
+hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Send(uint8_t Channel, hseSrvDescriptor_t *pHseSrvDesc) {
     /* Response received if TIMEOUT did not occur */
     if (HSE_Write_Impl(Channel, (uint32_t)pHseSrvDesc)) {
         return HSE_Read_Impl(Channel);
@@ -112,9 +112,23 @@ hseSrvResponse_t GetAttr(hseAttrId_t attrId, uint32_t attrLen, void *pAttr) {
     return HSE_Send(0, &hseSrvDesc);
 }
 
-hseSrvResponse_t HSE_SwitchBlock(void) {
+void __attribute__((section(".ramcode"))) HSE_SwitchBlock(void) {
     hseSrvDescriptor_t hseSrvDesc = {HSE_SRV_ID_ACTIVATE_PASSIVE_BLOCK};
-    return HSE_Send(0, &hseSrvDesc);
+    HSE_Send(0, &hseSrvDesc);
+    __DSB();
+    __ISB();
+
+	{
+		register uint32_t Count = 100000UL;
+		while (--Count) {
+			__NOP();
+		}
+	}
+
+    MC_ME.MODE_CONF.B.FUNC_RST = 1;
+    MC_ME.MODE_UPD.B.MODE_UPD  = 1;
+    MC_ME.CTL_KEY.B.KEY        = (uint32_t)0x00005AF0U;
+    MC_ME.CTL_KEY.B.KEY        = (uint32_t)0x0000A50FU;
 }
 
 /**
@@ -123,7 +137,7 @@ hseSrvResponse_t HSE_SwitchBlock(void) {
 
 /* #define FORMAT_KEY_AFTER_INSTALL */
 
-hseSrvResponse_t HSE_Format(void) {
+hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Format(void) {
 
 #if defined(FORMAT_KEY_AFTER_INSTALL)
     uint32_t pNvmFormat = (uint32_t)&aHseNvmKeyCatalog[0];
@@ -148,7 +162,7 @@ hseSrvResponse_t HSE_Format(void) {
 
 /* #define IMPORT_KEY_AFTER_FORMAT */
 
-hseSrvResponse_t HSE_Import(void) {
+hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Import(void) {
 #if defined(FORMAT_KEY_AFTER_INSTALL) && defined(IMPORT_KEY_AFTER_FORMAT)
     return HSE_SRV_RSP_OK;
 #else

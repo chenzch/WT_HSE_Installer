@@ -31,7 +31,7 @@ hseSrvResponse_t TrigUpdateSBAF(void);
 
 hseSrvResponse_t HSE_GetVersion(hseAttrFwVersion_t *pHseFwVersion);
 
-hseSrvResponse_t HSE_SwitchBlock(void);
+void __attribute__((section(".ramcode"))) HSE_SwitchBlock(void);
 
 bool HSE_Write(uint32_t Data);
 
@@ -39,9 +39,9 @@ hseSrvResponse_t HSE_Read(void);
 
 bool MU_IsFormated(void);
 
-hseSrvResponse_t HSE_Format(void);
+hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Format(void);
 
-hseSrvResponse_t HSE_Import(void);
+hseSrvResponse_t __attribute__((section(".ramcode"))) HSE_Import(void);
 
 #if defined(__cplusplus)
 }
