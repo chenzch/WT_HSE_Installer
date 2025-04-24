@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2022 NXP.
+*   Copyright 2022-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -77,8 +77,10 @@ typedef uint8_t hseKHTTRestrictFlags_t;
  *         @note
  *         - The "Managed Security Component"(MSC) term is used bellow for any HW accelerator on host-side that uses keys managed by HSE FW.
  *         - Each MSC key inherit the properties of its corresponding key in HSE.
+ *         - The only accepted values for keyInfo.keyFlags are HSE_KF_USAGE_ENCRYPT, HSE_KF_USAGE_DECRYPT, HSE_KF_USAGE_SIGN or HSE_KF_USAGE_VERIFY.
+ *           Any other key usage flag set beside the accepted ones will lead to the key importing failure with HSE_SRV_RSP_NOT_ALLOWED status.
  *         - If keyInfo.keyFlags is set to any of the HSE_KF_USAGE_VERIFY and HSE_KF_USAGE_SIGN flags, the key can only be used with CMAC operation.
- *           The rest of the key flags are ignored.
+ *           The rest of the key flags are ignored. For SHE RAM keys, they can only be used with CMAC operation.
  *         - If the DID input received over ACE buses is not matching the DID flags configured for the entry, the key can not be used.
  *         - MSC key store must be statically partitioned per host (e.g. each host has its own key slots)
  * */
@@ -90,16 +92,18 @@ typedef struct
     hseKeyHandle_t      hseKeyHandle;
     /** @brief   INPUT: The MSC key slot index. The MSC/ACE subsystem accesses a key selecting a key slot in the range 0 to 127.
      *           @note
-     *           - The MSC keystore (e.g. ACE keystore) contains 128 X key slots of 16 bytes and the associated key properties.
-     *             Without considering the key properties, it can be seen as an array of 128 elements, the size of each element
-     *             being 16 bytes (e.g keystore[128][16]).
+     *           - The MSC keystore (e.g. ACE keystore) contains 128 X key slots of 16 bytes (or 80 X key slots on S32K388)
+     *             and the associated key properties.
+     *           - Without considering the key properties, it can be seen as an array of 128 elements (or 80 elements on S32K388),
+     *             the size of each element being 16 bytes (e.g keystore[128][16]).
      *           - An AES128 key occupies only one key slot. An AES256 key occupies two key slots. In this case,
      *             the next key slot following an AES256 key must be placed at N+2 (e.g keystore[N+2]), where N is the AES256 key slot index.
-     *           - The maximum number of MSC keys is 128 x 128-bit keys or 64 x 256-bit keys or any combination in between. */
+     *           - The maximum number of MSC keys is 128 x 128-bit keys or 64 x 256-bit keys (on S32K388, 80 x 128-bit keys or 40 x 256-bit keys)
+     *             or any combination in between.*/
     uint8_t             mscKeySlotIdx;
     /** @brief   INPUT: MSC Instance (e.g. the instance of the HW accelerator on the host side).
      *           @note
-     *           On S32ZE, field is ignored; there is only one MSC instance (e.g. ACE HW accelerator). */
+     *           On S32ZE/S32K388, field is ignored; there is only one MSC instance (e.g. ACE HW accelerator). */
     uint8_t             mscInstance;
     /** @brief   INPUT: 16 bits for Domain ID (DID) filtering. The didFlags is compared against "1<<bus DID value".
      *           @note
@@ -128,7 +132,7 @@ typedef struct
  */
 typedef struct
 {
-    /** @brief   INPUT: Number of KHTT entries. It shall be maximum 200 entries. */
+    /** @brief   INPUT: Number of KHTT entries. It shall be maximum 200 entries(S32ZE) and 80 entries(S32K388). */
     uint16_t            numOfKHTTEntries;
     uint8_t             reserved[2];
 /** @brief   INPUT: Pointer to the Key Handle Translation Table(KHTT) that contains #numOfKHTTEntries entries of type #hseKHTTEntry_t. */

@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -87,6 +87,7 @@ typedef uint16_t hseCrStartOption_t;
             - LPDDR4 Flash (used only for S32ZE devices)
             - for different SMR(s), any combination of the above memory interfaces, except MMC and SD (e.g. QSPI/LPDDR4 Flash and SD, QSPI/LPDDR4 Flash and MMC).
       - For HSE_B, the source memory flags (QSPI/SD/MMC/LPDDR4) are not used.
+      - For SAF86XX devices, if the Flashless Boot Mode is used, The pSmrSrc and pSmrDest addresses must be equal. The SMR will be only authenticated and decrypted (only if encrypted) in place. BootROM copied the SMR images in SRAM.
 */
 typedef uint8_t hseSmrConfig_t;
 #define HSE_SMR_CFG_FLAG_QSPI_FLASH          ((hseSmrConfig_t)0x0U)        /**< @brief Identifies the Interface (where the SMR needs to be copied from)*/
@@ -173,7 +174,7 @@ typedef struct
     uint8_t             reserved0[3U];      /**< @brief Reserved for alignment. */
     uint32_t            checkPeriod;        /**< @brief If #checkPeriod != 0, HSE verify the SMR entry periodically (in background).
                                                         Specifies the verification period in x100 milliseconds when HSE is running at maximum frequency.
-                                                        Otherwise, the period is multiplied by the factor max_freq/actual_freq (e.g. 10ms at 400MHz, 20ms at 200MHz, etc).
+                                                        Otherwise, the period is multiplied by the factor max_freq/actual_freq (e.g. 100ms at 400MHz, 200ms at 200MHz, etc).
                                                         @note
                                                         - The value 0xFFFFFFFFUL invalid; the checkPeriod max value must be [MAX_UNSIGNED32_INT - 1].
                                                         - If the checkPeriod is non zero, the #pSmrDest must be non zero and the #configFlags must be zero.
@@ -296,6 +297,7 @@ typedef struct
 *    - The keys linked with a SMR entry (through smrFlags in hseKeyInfo_t) will become unavailable after successful installation of the SMR entry.
 *      The SMR must be verified (automatically at boot-time, periodically or via verify request at run-time) before the key can be used again.
 *    - If a periodic SMR is updated during runtime using this service, the periodic checks for this SMR entry are disabled till the next reset.
+*    - The HSE firmware authenticate image without loading the image when pSmrSrc and pSmrDest address are the same.
 *
 * @note (SHE boot): <br>
 *    The SMR #0 is the only SMR that can be associated to the SHE AES key BOOT_MAC_KEY as the
@@ -312,16 +314,19 @@ typedef struct
 *          respectively to NULL and 0.
 *        - If SMR #0 installation using the keyHandle for SHE(BOOT_MAC_KEY), #HSE_SMR_CFG_FLAG_INSTALL_AUTH = 0 is not allowed.
 *
-* @note NXP RFE SMR entries: <br>
-*    On platforms having #HSE_SPT_NXP_RFE_SW feature enabled HSE FW provides the functionality of installing NXP owned SMR entries on application cores.
-*    These are images encrypted and authenticated by NXP and have dedicated handling on installation.
-*    To install such an image one must:
-*        - Declare the ownership of the SW targeted for the application core to NXP - by setting the OTP attribute #HSE_RFE_CORE_SW_MODE_ATTR_ID.
+* @note Installing a NXP RFE SMRs entry: <br>
+*      For SAFXXXX, the protected NXP RFE images are installed configuring two image:
+*       - one image (CODE) having the destination address only in RFE ITCM (2 SMRs, one as primary and one as back-up)
+*       - and another image (configuration DATA) having the destination address RFE DTCM (2 SMRs, one as primary and one as back-up)
+*      All four SMR above are linked with the CR entry for RFE-M7 core (see the installation of NXP RFE CR entry).
+*      These images are encrypted and authenticated by NXP (using the NXP ROM keys) and have specific handling on installation (refer to HSE FW reference manual)
+*
+*    To install a single image one must (see the example code below):
 *        - Program the image(s) to the external flash to a chosen location, e.g. ExternalFlashAddr.
-*        - Provide the encryption and authentication key handles of the ROM keys targeted for this use case (#HSE_ROM_KEY_AES256_KEY2 and #HSE_ROM_KEY_RSA2048_PUB_KEY1).
-*        - Provide the installation address of the image (can be the same of that from the external flash - ExternalFlashAddr - as long as it is in QSPI/LPDDR4 or a different chosen location - InstallationAddr).
-*        - Provide a chosen index for the installed SMR - Ind.
-*   Example of NXP SMR installation:
+*        - Provide the encryption and authentication key handles of the ROM keys (#HSE_ROM_KEY_AES256_KEY2 and #HSE_ROM_KEY_RSA2048_PUB_KEY1).
+*        - Provide the installation address of the image (can be the same as ExternalFlashAddr).
+*        - Provide a SMR entryIndex for the installation
+*   Example of a single NXP RFE image installation (note that 4 SMRs must be installed):
 *   \code
 *   smrEntry.pSmrSrc                            = ExternalFlashAddr;
 *   smrEntry.authKeyHandle                      = HSE_ROM_KEY_RSA2048_PUB_KEY1;
@@ -333,10 +338,9 @@ typedef struct
 *   hseDescriptor.smrEntryInstallReq.pSmrEntry  = HSE_PTR_TO_HOST_ADDR(&smrEntry);
 *   hseDescriptor.smrEntryInstallReq.pSmrData   = InstallationAddr;
 *
-*   SendDescToHse(&hseDescriptor);
+*   response = SendDescToHse(&hseDescriptor);
 *   \endcode
 *   Constraints and additional notes:
-*        - #HSE_RFE_CORE_SW_MODE_ATTR_ID attribute must be set to NXP before being allowed to install NXP SMR entries.
 *        - Only #HSE_ACCESS_MODE_ONE_PASS access mode can be used.
 *        - All parameters not specified in the above example are ignored.
 */
@@ -434,6 +438,8 @@ typedef struct
 
 /** @brief HSE Secure Memory Region verification service.
  *  @details This service starts the on-demand verification of a secure memory region by specifying the index in the SMR table.
+ *
+ * @note: For SAF86XX devices, if the Flashless Boot Mode is used (pSmrSrc == pSmrDest), for any "options" value, HSE will skip the loading (the SMR image is already loaded in SRAM)
  */
 typedef struct
 {
@@ -473,28 +479,27 @@ typedef struct
  *          - SuperUser rights (for NVM Configuration) are needed to perform this service.
  *          - Updating an existing CR entry is conditioned by having all preBoot and postBoot SMR(s) linked with the previous entry verified successfully (applicable only in OEM_PROD/IN_FIELD LCs).
  *
- *  @note NXP RFE CR entry: <br>
- *      On platforms having #HSE_SPT_NXP_RFE_SW feature enabled HSE FW provides the functionality of installing NXP owned CR entry for application cores (e.g. RFE - CORE1 on SAF85XX platform).
- *      This CR entry are linked with the NXP SMR entries and have a dedicated handling on installation.
- *      To install such an entry one must:
- *          - Install the corresponding NXP SMR images.
- *          - Link the NXP SMR entries to the CR entry to be installed.
- *          - Provide a chosen index for the installed CR - CrInd.
- *   Example of RFE CR installation when owned by NXP:
+ *  @note Installing a NXP RFE Core Reset entry: <br>
+ *      For SAF85XX, SAF86XX, the HSE FW provides the functionality of installing the protected NXP RFE images (e.g. RFE - CORE1 on SAF85XX platform).
+ *      This CR entry are linked with the NXP RFE images (4 SMRs, two for primary and two for back-up) and have a specific handling on installation (refer to HSE FW reference manual).
+ *      To install such an entry one must (refer to the example code below):
+ *          - Install the corresponding NXP SMR images (see SMR installation NXP RFE images)
+ *          - Link the NXP RFE images (4 SMRs) to the CR entry to be installed.
+ *          - Provide the crEntryIndex index (CR_IND_RFE).
+ *   Example of RFE CR installation for NXP RFE im:
  *   \code
- *   crEntry.coreId                                 = HSE_APP_CORE1;
- *   crEntry.preBootSmrMap                          = ((1UL << ITCM_PRIMARY_IND) | (1UL << DTCM_PRIMARY_IND));
- *   crEntry.altPreBootSmrMap                       = ((1UL << ITCM_BACKUP_IND)  | (1UL << DTCM_BACKUP_IND));
+ *   crEntry.coreId = HSE_APP_CORE1;
+ *   crEntry.preBootSmrMap = ((1UL << SMR_IND_RFE_ITCM_PRIMARY) | (1UL << SMR_IND_RFE_DTCM_PRIMARY));
+ *   crEntry.altPreBootSmrMap = ((1UL << SMR_IND_RFE_ITCM_BACKUP) | (1UL << SMR_IND_RFE_DTCM_BACKUP));
  *
- *   hseDescriptor.srvId                            = HSE_SRV_ID_CORE_RESET_ENTRY_INSTALL;
- *   hseDescriptor.crEntryInstallReq.crEntryIndex   = CrInd;
- *   hseDescriptor.crEntryInstallReq.pCrEntry       = HSE_PTR_TO_HOST_ADDR(&crEntry);
+ *   desc.srvId = HSE_SRV_ID_CORE_RESET_ENTRY_INSTALL;
+ *   desc.crEntryInstallReq.crEntryIndex = CR_IND_RFE;
+ *   desc.crEntryInstallReq.pCrEntry = HSE_PTR_TO_HOST_ADDR(&crEntry);
+ *   response = SendHseDescriptor(&desc);
  *
- *   SendDescToHse(&hseDescriptor);
  *   \endcode
  *   Constraints and additional notes:
  *          - The referenced NXP SMR must be installed prior to CR entry installation.
- *          - Only NXP SMR are allowed to be linked with the RFE core when #HSE_RFE_CORE_SW_MODE_ATTR_ID is set to NXP.
  *          - All parameters not specified in the above example are ignored.
  */
 typedef struct

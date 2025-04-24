@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -79,10 +79,11 @@ extern "C"{
  *             at boot does not exist if IVT is pointing to a pink image. It is possible to enforce a boot to blue image via HSE
  *             system attributes (refer to hseOtpRollbackProtectionPolicy_t attribute). As long as the HSE SYS-IMG is
  *             available, it can prevent the HSE executing a pink image, hence bypassing the rollback protection. The HSE
- *             always ensure that the rollback counter value in the blue image is above or equal to the rollback counter infuse
+ *             always ensure that the rollback counter value in the blue image is above or equal to the rollback counter in fuse
  *          -  If the OTP rollback protection is not disabled (refer to #hseOtpRollbackProtectionPolicy_t attribute),
- *             to be able to update fuse counter, the VDD_EFUSE supply must be powered at start-up before fuses
- *             are written (refer to HSE FW Reference Manual). The anti-rollback counter is incremented in fuses at start-up.
+ *             to be able to update fuse counter, the VDD_EFUSE supply must be powered before fuses
+ *             are written (refer to HSE FW Reference Manual). The anti-rollback counter is incremented in fuses at start-up 
+ *             or on demand, depending on the configuration of #hseOtpRollbackProtectionPolicy_t attribute.
  *             After writing the updated current/blue FW image in the external flash, a reset is needed.
  *             The VDD_EFUSE state is checked before the fuse write by reading the NCSPD_STAT register of the on-chip PMC module.
  *             The application shall provide read-only access (xRDC restriction) to HSE to read the NCSPD_STAT register.
@@ -113,6 +114,15 @@ typedef struct
     /** @brief  INPUT:    It is the address of the buffer where the encrypted version of HSE_H/M FW file (with a device specific key) will be stored.*/
     HOST_ADDR               pOutFwBuffer;
 } hseFirmwareUpdateSrv_t;
+
+/**
+ * @brief   HSE_H/M Firmware Verify Service.
+ * @details This service can be used to verify the pink or blue FW image (in SRAM or QSPI flash)*/
+typedef struct
+{
+    /** @brief  INPUT:    The address of HSE Firmware file.  */
+    HOST_ADDR               pInFwFile;
+} hseFirmwareVerifySrv_t;
 #endif /* HSE_SPT_FLASHLESS_DEV */
 
 

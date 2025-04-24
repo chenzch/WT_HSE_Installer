@@ -11,7 +11,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -58,6 +58,16 @@ extern "C"{
 /*==================================================================================================
 *                                      DEFINES AND MACROS
 ==================================================================================================*/
+#ifdef HSE_SPT_FLASHLESS_DEV /* HSE_H/M device */
+/** @brief    Mask value that specifies the counterpart of the anti-rollback counter (SYS-IMG or FW-IMG).
+ *  @details  Selects the counterpart of the anti-rollback counter that will be updated when calling
+ *            #hseOnDemandAntiRbcUpdateSrv_t service.
+ */
+typedef uint32_t hseAntiRbcMask_t;
+#define HSE_SYS_IMG_ANTI_RBC_MASK           ((hseAntiRbcMask_t)(0x00005F51UL))    /**< @brief SYS-IMG counter mask */
+#define HSE_FW_IMG_ANTI_RBC_MASK            ((hseAntiRbcMask_t)(0xF31C0000UL))    /**< @brief FW-IMG counter mask */
+#define HSE_SYS_FW_IMG_ANTI_RBC_MASK        ((hseAntiRbcMask_t)(0xF31C5F51UL))    /**< @brief Both SYS-IMG and FW-IMG counters mask */
+#endif /* HSE_SPT_FLASHLESS_DEV */
 
 /*==================================================================================================
 *                                             ENUMS
@@ -66,6 +76,26 @@ extern "C"{
 /*==================================================================================================
                                  STRUCTURES AND OTHER TYPEDEFS
 ==================================================================================================*/
+#ifdef HSE_SPT_FLASHLESS_DEV /* HSE_H/M device */
+/** @brief   On demand anti-rollback counter update service.
+ *  @details The service can be used only if the anti-rollback counter policy disableOtpRollbackProtect (see #hseOtpRollbackProtectionPolicy_t)
+ *           is set to #HSE_ON_DEMAND_ANTI_RBC_UPDATE (otherwise, it returns HSE_SRV_RSP_NOT_ALLOWED).
+ *           If the anti-rollback counter is already updated, it returns HSE_SRV_RSP_OK.
+ *           @note:
+ *           The SYS-IMG should be properly stored to external flash, then sucessfully loaded and authenticated by HSE before calling this service.
+ *           This ensures that the SYS-IMG was not corrupted before burning the fuses.
+ *           The VDD_EFUSE must be powered before calling this service.
+ */
+typedef struct
+{
+    /** @brief   INPUT: Specifies the mask value that selects the counterpart of the anti-rollback counter
+     *                  that will be updated (SYS-IMG or FW-IMG).
+     *                  Select either one option or both simultaneously, depending on the use case.
+     * */
+    hseAntiRbcMask_t hseAntiRollbackCounterMask;
+} hseOnDemandAntiRbcUpdateSrv_t ;
+#endif /* HSE_SPT_FLASHLESS_DEV */
+
 /** @brief HSE Cancel service.
  *  @details This service cancels a HSE one-pass and streaming service that was sent on a specific channel.
  *
@@ -84,8 +114,8 @@ typedef struct
 
 #ifdef HSE_SPT_STREAM_CTX_IMPORT_EXPORT
 
-/** @brief   The maximum size of the streaming context. */
-#define MAX_STREAMING_CONTEXT_SIZE      (372UL)
+/** @brief The maximum size of the streaming context for any operation. */
+#define MAX_STREAMING_CONTEXT_SIZE                (372UL)
 
 /** @brief   Streaming Context Operation: Import/Export. */
 typedef uint8_t hseStreamContextOp_t;
@@ -140,6 +170,21 @@ typedef struct
 } hseEraseNvmDataSrv_t;
 #endif /* HSE_SPT_INTERNAL_FLASH_DEV */
 
+#ifdef HSE_SPT_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH
+/**
+ * @brief    Publish NVM Keystore from RAM to Flash.
+ * @details  This service is used to push all the keys of NVM keystore stored temporarily in RAM to secure flash.
+ *           The service is available for flash based devices only (HSE_B variant).
+ *           Can be performed only in CUST_DEL or OEM_PROD life cycles, otherwise #HSE_SRV_RSP_NOT_ALLOWED error will be reported.
+ *
+ * @note     If the status #HSE_STATUS_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH is not set, #HSE_SRV_RSP_NOT_ALLOWED error will be reported.
+ */
+typedef struct
+{
+    uint8_t          reserved[4];
+} hsePublishNvmKeystoreRamToFlashSrv_t;
+#endif /* HSE_SPT_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH */
+
 #ifdef HSE_SPT_ERASE_FW
 /**
  * @brief    Erase HSE Firmware from the device.
@@ -170,6 +215,38 @@ typedef struct
     HOST_ADDR   pTrimPw;
 } hseTrimPasswordProvision_t;
 #endif /* HSE_SPT_TRIM_PASSWORD_PROVISION */
+
+#ifdef HSE_SPT_SENSOR_ARMING
+
+/**
+ * @brief    On-demand configuration (disarm/arm) of security sensors at runtime.
+ * @details  This service allows to disarm/arm sensors at run time to mitigate the risk of HSE entering into shutdown mode
+ *           due to customer's operating environment.
+ *           For instance, a sensor might be temporarly disabled at boot if the environmental conditions could potentially trigger unintended behavior,
+ *           and armed at runtime through this service.
+ *
+ *           This service can be disabled/enabled configuring the allowOnDemandSensorArming parameter in #hseSensorDisarmingAttr_t attribute.
+ *           By default, this service is disabled.
+ *           Each sensor has assigned one byte in sensorCfg[] list that can have the following values (refer to #hseSensorState_t):
+ *           -  #HSE_SENSOR_UNUSED: sensor configuration is not modified.
+ *           -  #HSE_SENSOR_ARMED: arm the sensor. If the sensor detects a violation, HSE goes to shutdown (for more details about HSE shutdown,
+ *              refer HSE Firmware Reference Manual).
+ *           -  #HSE_SENSOR_DISARMED: disarm the sensor. Violations detected by the sensor will be ignored.
+ *
+ *           The host can read the #hseSensorsStateAttr_t to get the list with the state of each supported sensor that can be configured through this service.
+ *
+ *      @note
+ *           - Only the sensors provided by the #HSE_SENSORS_STATE_ATTR_ID attribute (read-only) can be armed/disarmed.
+ *           - Sensors that are not supported (#HSE_SENSOR_UNUSED state) cannot be armed or disarmed. HSE_SRV_RSP_NOT_ALLOWED status is returned.
+ */
+typedef struct
+{
+    /** @brief   INPUT: Byte sensor list to be configured (on-demand) for each supported sensor.
+     *                  The sensor byte is ignored if it is set to #HSE_SENSOR_UNUSED. */
+    hseSensorState_t    sensorCfg[8U];
+    uint8_t             reserved[8U];
+} hseOnDemandSensorArming_t;
+#endif /* HSE_SPT_SENSOR_ARMING */
 
 /*==================================================================================================
                                  GLOBAL VARIABLE DECLARATIONS

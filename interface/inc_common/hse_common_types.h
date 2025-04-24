@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -189,24 +189,24 @@ typedef uint8_t hseRsaAlgo_t;
 
     Core assignment table:
 
-    | CoreID | S32G2XX | S32R45| S32R41      | SAF85XX     |S32G3XX  | S32ZE             |
-    |-------:|:-------:|:-----:|:-----------:|:-----------:|:-------:|:-----------------:|
-    |   0    | M7_0    | M7_0  | M7_0        | M7_0        | M7_0    | M33 (SMU)         |
-    |   1    | M7_1    | M7_1  | M7_1        | M7_1(RFE)   | M7_1    | LLCE_0(CE M33_0)* |
-    |   2    | M7_2    | M7_2  | A53_0       | A53_0       | M7_2    | LLCE_1(CE M33_1)* |
-    |   3    | A53_0   | A53_0 | BBE32EP DSP | BBE32EP DSP | M7_3    | CEVA_SPF2*        |
-    |   4    | A53_1   | A53_1 |             |             | A53_0   | R52_0             |
-    |   5    | A53_2   | A53_2 |             |             | A53_1   | R52_1             |
-    |   6    | A53_3   | A53_3 |             |             | A53_2   | R52_2             |
-    |   7    | LLCE_0* |       |             |             | A53_3   | R52_3             |
-    |   8    | LLCE_1* |       |             |             | A53_4   | R52_4             |
-    |   9    | LLCE_2* |       |             |             | A53_5   | R52_5             |
-    |  10    | LLCE_3* |       |             |             | A53_6   | R52_6             |
-    |  11    |         |       |             |             | A53_7   | R52_7             |
-    |  12    |         |       |             |             | LLCE_0* |                   |
-    |  13    |         |       |             |             | LLCE_1* |                   |
-    |  14    |         |       |             |             | LLCE_2* |                   |
-    |  15    |         |       |             |             | LLCE_3* |                   |
+    | CoreID | S32G2XX | S32R45| S32R41      | SAF85XX     | SAF86XX     |S32G3XX  | S32ZE             |
+    |-------:|:-------:|:-----:|:-----------:|:-----------:|:-----------:|:-------:|:-----------------:|
+    |   0    | M7_0    | M7_0  | M7_0        | M7_0        | M7_0        | M7_0    | M33 (SMU)         |
+    |   1    | M7_1    | M7_1  | M7_1        | M7_1(RFE)   | M7_1(RFE)   | M7_1    | LLCE_0(CE M33_0)* |
+    |   2    | M7_2    | M7_2  | A53_0       | A53_0       | NOT_MAPPED  | M7_2    | LLCE_1(CE M33_1)* |
+    |   3    | A53_0   | A53_0 | BBE32EP DSP | BBE32EP DSP | BBE32EP DSP | M7_3    | CEVA_SPF2*        |
+    |   4    | A53_1   | A53_1 |             |             |             | A53_0   | R52_0             |
+    |   5    | A53_2   | A53_2 |             |             |             | A53_1   | R52_1             |
+    |   6    | A53_3   | A53_3 |             |             |             | A53_2   | R52_2             |
+    |   7    | LLCE_0* |       |             |             |             | A53_3   | R52_3             |
+    |   8    | LLCE_1* |       |             |             |             | A53_4   | R52_4             |
+    |   9    | LLCE_2* |       |             |             |             | A53_5   | R52_5             |
+    |  10    | LLCE_3* |       |             |             |             | A53_6   | R52_6             |
+    |  11    |         |       |             |             |             | A53_7   | R52_7             |
+    |  12    |         |       |             |             |             | LLCE_0* |                   |
+    |  13    |         |       |             |             |             | LLCE_1* |                   |
+    |  14    |         |       |             |             |             | LLCE_2* |                   |
+    |  15    |         |       |             |             |             | LLCE_3* |                   |
 @note: The cores marked with "*" are currently not supported to be loaded by the HSE FW
 */
 #else /* HSE_B device */
@@ -215,12 +215,12 @@ typedef uint8_t hseRsaAlgo_t;
 
     Core assignment table:
 
-    | CoreID | S32K311 | S32K312| S32K342 | S32K344 | S32K396 | S32K358  | S32K388 |
-    |-------:|:-------:|:------:|:-------:|:-------:|:-------:|:--------:|:-------:|
-    |   0    | M7_0    | M7_0   | M7_0    | M7_0    | M7_0    | M7_0     | M7_0    |
-    |   1    |         |        | M7_1    | M7_1    | M7_1    | M7_1     | M7_1    |
-    |   2    |         |        |         |         | M7_2    | M7_2     | M7_2    |
-    |   3    |         |        |         |         |         |          | M7_3    |
+    | CoreID | S32K311 | S32K312| S32K342 | S32K344 | S32K396 | S32K364 | S32K366 | S32K358  | S32K388 |
+    |-------:|:-------:|:------:|:-------:|:-------:|:-------:|:-------:|:-------:|:--------:|:-------:|
+    |   0    | M7_0    | M7_0   | M7_0    | M7_0    | M7_0    | M7_0    | M7_0    | M7_0     | M7_0    |
+    |   1    |         |        | M7_1    | M7_1    | M7_1    |         |         | M7_1     | M7_1    |
+    |   2    |         |        |         |         | M7_2    | M7_2    | M7_2    | M7_2     | M7_2    |
+    |   3    |         |        |         |         |         |         |         |          | M7_3    |
 */
 #endif /* HSE_SPT_FLASHLESS_DEV */
 
@@ -307,7 +307,16 @@ typedef struct
 
 
 /** @brief EDDSA signature scheme.
- *  @details  Includes parameters needed for EDDSA signature generate/verify. */
+ *  @details  Includes parameters needed for EDDSA signature generate/verify. 
+ * 
+ *  EdDSA signature mode vs. EdDDA sign scheme parameters:
+ * |EdDSA signature mode | EdDsa sign scheme parameters                         |
+ * |--------------------:|:----------------------------------------------------:|
+ * | PureEdDSA           | bHashEddsa == FALSE && contextLength/pContext == 0   |
+ * | Context             | bHashEddsa == FALSE && contextLength/pContext != 0   |
+ * | HashEdDSA           | bHashEddsa == TRUE                                   |
+ * 
+ * */
 typedef struct
 {
     /** @brief   INPUT: Whether to pre-hash the input, and perform a HashEddsa signature. */

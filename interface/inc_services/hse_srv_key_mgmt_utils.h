@@ -11,7 +11,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -63,15 +63,15 @@ typedef uint8_t hseEraseKeyOptions_t;
 #define HSE_ERASE_NOT_USED                   (0U)  /**< @brief Erase key options not used. */
 #define HSE_ERASE_ALL_RAM_KEYS_ON_MU_IF      (1U)  /**< @brief Erase all RAM keys assigned to MU Interface on which the erase service is sent. */
 #define HSE_ERASE_ALL_NVM_SYM_KEYS_ON_MU_IF  (2U)  /**< @brief Erase all NVM symmetric keys assigned to MU Interface on which the erase service is sent
-                                                               (needs CUST/OEM SuperUser rights). */
+                                                               (needs CUST/OEM SuperUser rights with #HSE_SYS_AUTH_KEY_MGMT privileges). */
 #define HSE_ERASE_ALL_NVM_ASYM_KEYS_ON_MU_IF (3U)  /**< @brief Erase all NVM asymmetric keys assigned to MU Interface on which the erase service is sent
-                                                               (needs CUST/OEM SuperUser rights). */
+                                                               (needs CUST/OEM SuperUser rights with #HSE_SYS_AUTH_KEY_MGMT privileges). */
 #define HSE_ERASE_ALL_NVM_KEYS_ON_MU_IF      (4U)  /**< @brief Erase all NVM KEYS assigned to MU Interface on which the erase service is sent
-                                                                (needs CUST/OEM SuperUser rights). */
+                                                               (needs CUST/OEM SuperUser rights with #HSE_SYS_AUTH_KEY_MGMT privileges). */
 #define HSE_ERASE_KEYGROUP_ON_MU_IF          (5U)  /**< @brief Erase all keys assigned to the key group referenced in the key handle.
                                                                The MU Interface on which the erase service is sent to must be part of the group mask.
-                                                               CUST/OEM SuperUser rights with KM privileges are needed to perform this operation.
-                                                               In case the key group as an owner (CUST/OEM) the SU rights must be provided for this owner. */
+                                                               CUST/OEM SuperUser rights with #HSE_SYS_AUTH_KEY_MGMT privileges are needed to perform this operation.
+                                                               In case the key group has an owner (CUST/OEM) the SU rights must be provided for this owner. */
 
 /*==================================================================================================
 *                                             ENUMS
@@ -140,12 +140,13 @@ typedef struct
  *
  *      The key catalogs (NVM and RAM) can only be formatted (or re-formatted)  only if one of the following conditions is met:
  *      - if the application has CUST_DEL SuperUser rights (see hseSysAuthorizationReqSrv_t).
- *      - if #HSE_STATUS_INSTALL_OK is cleared (there is no SYS-IMG installed). In this case, after formatting the key catalogs,
- *        the application will be granted with CUST and OEM SU rights (ANY).
+ *      - if #HSE_STATUS_INSTALL_OK is cleared (failure to read SYS-IMG from flash, or SYS-IMG missing in flash).
+ *        In this case, after formatting the key catalogs, the application will be granted with CUST and OEM SU rights (ANY).
  *      @note
  *            - Each catalog entry represent a key group of the same key type.
  *            - Each group is identified by its index within the catalog.
- *            - Each group has an owner (see #hseKeyGroupOwner_t). NVM keys can be owned by CUST or OEM; RAM key owner is always #HSE_KEY_OWNER_ANY.
+ *            - Each group has an owner (see #hseKeyGroupOwner_t). NVM keys can be owned by CUST or OEM, except the NVM SHE keys that shall have the owner HSE_KEY_OWNER_ANY;
+ *              RAM key owner is always #HSE_KEY_OWNER_ANY.
  *            - Note that a key group can contain keys that have keybitLen <= maxKeyBitLen.
  *              For example, the group of key type #HSE_KEY_TYPE_AES of 256bits can contain AES128, AES192 and AES256 keys.
  *              If there are not enough slots for an AES128 key in an AES128 group, the key can be store in an AES256 slot.
@@ -170,14 +171,12 @@ typedef struct
  *    \endcode
  *
  *    SHE Key catalog configuration (see below configuration):
- *    - NVM SHE keys shall be mapped on key group 0 in NVM key Catalog . Otherwise an error will be reported.
- *    - In addition to the SHE keys KEY_1 to KEY_10 (key ID 0x4 to 0x0D), the HSE firmware allows the application
- *      to provision extra NVM SHE keys. These extended NVM SHE key groups must map to the key groups 1 to 4 in the NVM key catalogs,
- *      and shall contain 10 keys.
- *    - Maximum 5 NVM SHE groups are allowed.
- *    - RAM SHE key shall also be mapped on key group 0 in RAM key Catalog.
+ *    - A maximum 5 NVM SHE groups are allowed.
+ *    - NVM SHE keys shall be mapped in the first 5 groups in NVM key Catalog.
+ *    - It is recommended to have the SHE key groups in the first groups of the NVM key catalog. Any other non-SHE key
+ *      group can be added after SHE key groups in NVM/RAM Key Catalogs.
+ *    - RAM SHE key shall be mapped on key group 0 in RAM key Catalog.
  *    - The owner for SHE key group shall be set to #HSE_KEY_OWNER_ANY.
- *    - Any other non-SHE key group can be added after SHE key groups in NVM/RAM Key Catalogs.
  *
  *   NVM SHE Key Catalog Configuration:
  *   - row0: MASTER_ECU_KEY, BOOT_MAC_KEY, KEY_1 to KEY_10
@@ -218,7 +217,6 @@ typedef struct
  *  @details Used to update the NVM or RAM key catalogs without reformatting and erasing the contents.
  *           The new key groups added via this services will be appended to the end of the groups already part of the targeted key catalog configuration.
  *           As a precondition, the key catalogs must be formatted before calling this service.
- *           SuperUser access rights with KM privileges are needed in order to execute this service (see #hseSysAuthorizationReqSrv_t service).
  */
 #ifdef HSE_SPT_EXTEND_KEY_CATALOG
 typedef struct
@@ -247,7 +245,7 @@ typedef struct
  *
  * @note
  * - The MU mask of the key group(s) must match the MU interface on which the erase request was sent.
- * - For NVM key erase, the MU interface on which the host was authorized as SupperUser must match the MU interface
+ * - For NVM key erase, the MU interface on which the host was authorized as SuperUser must match the MU interface
  *   on which erase service request has been sent.
  * - SHE keys cannot be erased individually (as single slot or as single NVM group). When #HSE_ERASE_ALL_NVM_SYM_KEYS_ON_MU_IF or #HSE_ERASE_ALL_NVM_KEYS_ON_MU_IF options are used, the SHE keys would be erased
  *   only if system authorization was performed beforehand using MASTER_ECU key. Otherwise, the operation will be successful erasing other key types, but not SHE keys.
@@ -287,36 +285,57 @@ typedef struct
 #ifdef HSE_SPT_KEY_VERIFY
 /** @brief   The algorithm used for key verification .*/
 typedef uint8_t hseKeyVerAlgo_t;
-#define HSE_KEY_VER_SHA256          ((hseKeyVerAlgo_t)HSE_HASH_ALGO_SHA2_256)   /**< @brief SHA256 */
-#define HSE_KEY_VER_SHA384          ((hseKeyVerAlgo_t)HSE_HASH_ALGO_SHA2_384)   /**< @brief SHA384 */
-#define HSE_KEY_VER_SHA512          ((hseKeyVerAlgo_t)HSE_HASH_ALGO_SHA2_512)   /**< @brief SHA512 */
-#define HSE_KEY_VER_CMAC            ((hseKeyVerAlgo_t)HSE_MAC_ALGO_CMAC)        /**< @brief CMAC (AES) */
+#define HSE_KEY_VER_SHA256            ((hseKeyVerAlgo_t)HSE_HASH_ALGO_SHA2_256)   /**< @brief SHA256 */
+#define HSE_KEY_VER_SHA384            ((hseKeyVerAlgo_t)HSE_HASH_ALGO_SHA2_384)   /**< @brief SHA384 */
+#define HSE_KEY_VER_SHA512            ((hseKeyVerAlgo_t)HSE_HASH_ALGO_SHA2_512)   /**< @brief SHA512 */
+#define HSE_KEY_VER_CMAC              ((hseKeyVerAlgo_t)HSE_MAC_ALGO_CMAC)        /**< @brief CMAC (AES) */
+#define HSE_KEY_VER_PUB_EXT_HASH      ((hseKeyVerAlgo_t)0xE5U)                    /**< @brief Verify the internal hash of a PUB_EXT key (e.g. external stored certificate) */
 
 /** @brief   HSE Key Verify service.
- *  @details This service is used to verify a CMAC, SHA256, SHA384 or SHA512 over
- *           a key stored inside HSE. The CMAC, SHA256 or SHA384 are provided by the application.
+ *  @details This service is used to verify a CMAC, SHA256, SHA384, SHA512 (SHA384/SHA512 is not supported on HSE_B)
+ *           over a key stored inside HSE. The CMAC and SHA tag are provided by the application.
  */
 typedef struct
 {
     /** @brief   INPUT: The key handle of the key that needs to be verified.
-     *                  The key must be a symmetric key.
+     *                  The verification is performed on the following key formats/types:
+     *                  - symmetric key (HSE_KEY_TYPE_AES, HSE_KEY_TYPE_HMAC, HSE_KEY_TYPE_SHARED_SECRET, HSE_KEY_TYPE_SIPHASH): array of #HSE_BITS_TO_BYTES(keyBitLength) size
+     *                  - HSE_KEY_TYPE_ECC_PUB:
+     *                      - Weierstrass curve keys: x-coordinate || y-coordinate (all in big endian); the length must be 2 * #HSE_BITS_TO_BYTES(keyBitLength)
+     *                      - Twisted Edwards curve keys: point Y (with the sign bit of X), in big endian; the length must be #HSE_BITS_TO_BYTES(keyBitLength)
+     *                      - Montgomery curve keys: the x-coordinate, in big endian; the length must be #HSE_BITS_TO_BYTES(keyBitLength)
+     *                  - HSE_KEY_TYPE_ECC_PAIR:
+     *                      - Weierstrass curve keys: x-coordinate || y-coordinate || scalar (all in big endian); the length must be 3 * #HSE_BITS_TO_BYTES(keyBitLength)
+     *                      - Twisted Edwards curve keys: point y (with the sign bit of X) || scalar, in big endian; the length must be 2 * #HSE_BITS_TO_BYTES(keyBitLength)
+     *                      - Montgomery curve keys: the X coordinate||scalar, in big endian; the length must be 2 * #HSE_BITS_TO_BYTES(keyBitLength)
+     *                  - HSE_KEY_TYPE_RSA_PUB / HSE_KEY_TYPE_DH_PUB : modulus || public exponent (all in big endian)
+     *                  - HSE_KEY_TYPE_RSA_PAIR / HSE_KEY_TYPE_DH_PAIR: modulus || public exponent || private exponent (all in big endian)
+     *                  - HSE_KEY_TYPE_ECC_PUB_EXT/ HSE_KEY_TYPE_RSA_PUB_EXT: verify the internal hash over the key container (e.g. certificate)
     */
     hseKeyHandle_t   keyHandle;
     /** @brief   INPUT: The key handle used for CMAC operation.
-     *                  For HSE_KEY_VER_SHA256, HSE_KEY_VER_SHA384 and HSE_KEY_VER_SHA512 selected algorithms, this parameter is ignored. */
+     *                  If the keyVerAlgo parameter uses a hash algorithm, this parameter is ignored.
+     */
     hseKeyHandle_t   cmackeyHandle;
-    /** @brief   INPUT: Key verification algorithm. It can be #HSE_KEY_VER_CMAC, #HSE_KEY_VER_SHA256, #HSE_KEY_VER_SHA384 or #HSE_KEY_VER_SHA512(see #hseKeyVerAlgo_t)  */
+    /** @brief   INPUT: Key verification algorithm (see #hseKeyVerAlgo_t)
+     *                  Note:
+     *                  - If this parameter is set to #HSE_KEY_VER_PUB_EXT_HASH, the key slot corresponding to keyHandle must be a PUB_EXT key slot.
+     *                  - For HSE_B devices, the #HSE_KEY_VER_SHA_384 and #HSE_KEY_VER_SHA_512 options are not supported.
+     */
     hseKeyVerAlgo_t  keyVerAlgo;
     /** @brief   INPUT: The provided tag length. It can be:
      *                  - a CMAC tag; the length must be between 8 - 16 bytes
-     *                  - a SHA256 hash; the length must be between 8 - 32 bytes
-     *                  - a SHA384 hash; the length must be between 8 - 48 bytes
-     *                  - a SHA512 hash; the length must be between 8 - 64 bytes
+     *                  - a SHA2_256 hash; the length must be between 8 - 32 bytes
+     *                  - a SHA2_384 hash; the length must be between 8 - 48 bytes
+     *                  - a SHA2_512 hash; the length must be between 8 - 64 bytes
+     *                 Note: If keyVerAlgo == HSE_KEY_VER_PUB_EXT_HASH, this parameter is ignored (the internal hash is used instead).
      */
     uint8_t          tagLen;
     /** @brief   Reserved bytes */
     uint8_t          reserved[2U];
-    /** @brief   INPUT: Address where tag is stored (CMAC tag, SHA256, SHA384 or SHA512 hash) */
+    /** @brief   INPUT: Address where tag is stored (CMAC tag or hash value).
+     *                 Note: If keyVerAlgo == HSE_KEY_VER_PUB_EXT_HASH, this parameter is ignored (the internal hash is used instead).
+     */
     HOST_ADDR        pTag;
 } hseKeyVerifySrv_t;
 #endif /* HSE_SPT_KEY_VERIFY */

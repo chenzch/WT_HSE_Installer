@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -60,6 +60,7 @@ typedef uint32_t  hseSrvResponse_t;
 #define HSE_SRV_RSP_COUNTER_OVERFLOW            ((hseSrvResponse_t)0x33D6D533UL)  /**< @brief The monotonic counter overflows. */
 #define HSE_SRV_RSP_SHE_NO_SECURE_BOOT          ((hseSrvResponse_t)0x33D6D623UL)  /**< @brief HSE did not perform SHE based secure Boot. */
 #define HSE_SRV_RSP_SHE_BOOT_SEQUENCE_ERROR     ((hseSrvResponse_t)0x33D7D83AUL)  /**< @brief Received SHE_BOOT_OK or SHE_BOOT_FAILURE more then one time. */
+#define HSE_SRV_RSP_RNG_INIT_IN_PROGRESS        ((hseSrvResponse_t)0x33D7D92AUL)  /**< @brief This error code is returned if RNG Intialization is in Progress. */
 
 #ifdef HSE_SPT_IPSEC
 #define HSE_SRV_RSP_IPSEC_INVALID_DATA          ((hseSrvResponse_t)0xDD333133UL)  /**< @brief Invalid (malformed) IP packet */

@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2022 NXP.
+*   Copyright 2022-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -61,35 +61,37 @@ extern "C"{
 
 #if defined(HSE_H)
     #if (HSE_PLATFORM == HSE_S32ZE) || (HSE_PLATFORM == HSE_S32Z1XX)
-    #define HSE_GPR_STATUS_ADDRESS                 (0x42280028UL)   /**< @brief HSE-GPR REG3 is in Subsystem Register Description (refer to #hseTamperConfigStatus_t) */
+    #define HSE_GPR_STATUS_ADDRESS                 (0x42280028UL)   /**< @brief HSE-GPR REG3 is in Security subsystem registers Description (refer to #hseTamperConfigStatus_t) */
     #else
-    #define HSE_GPR_STATUS_ADDRESS                 (0x4007C928UL)   /**< @brief HSE-GPR REG3 is in Subsystem Register Description (refer to #hseTamperConfigStatus_t)*/
+    #define HSE_GPR_STATUS_ADDRESS                 (0x4007C928UL)   /**< @brief HSE-GPR REG3 is in Security subsystem registers Description (refer to #hseTamperConfigStatus_t)*/
     #endif
 #endif /* HSE_H */
 
 #if defined(HSE_M)
+
     #if (HSE_PLATFORM == HSE_S32R41X)
-    #define HSE_GPR_STATUS_ADDRESS                 (0x400D8928UL)   /**< @brief HSE-GPR REG3 is in Subsystem Register Description (refer to #hseTamperConfigStatus_t)*/
+    #define HSE_GPR_STATUS_ADDRESS                 (0x400D8928UL)   /**< @brief HSE-GPR REG3 is in Security subsystem registers Description (refer to #hseTamperConfigStatus_t)*/
     #else
-    #define HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ1   (0x400D8940UL)   /**< @brief HSE-GPR REG9 is in Subsystem Register Description, <br>
+    #define HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ1   (0x400D8940UL)   /**< @brief HSE-GPR REG9 is in Security subsystem registers Description, <br>
                                                                                 Sequence 1 - To get the XOUT value in BIST mode BJT Core,
                                                                                              This result is denoted as XOUTbist. */
-    #define HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ2   (0x400D8944UL)   /**< @brief HSE-GPR REG10 is in Subsystem Register Description, <br>
+    #define HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ2   (0x400D8944UL)   /**< @brief HSE-GPR REG10 is in Security subsystem registers Description, <br>
                                                                                 Sequence 2 - To get the XOUT value in temperature acquisition mode.
                                                                                              This result is denoted as XOUT. */
-    #define HSE_TMU_BIST_MODE_TEST_ADC_OUTPUT      (0x400D8948UL)   /**< @brief HSE-GPR REG11 is in Subsystem Register Description, <br>
+    #define HSE_TMU_BIST_MODE_TEST_ADC_OUTPUT      (0x400D8948UL)   /**< @brief HSE-GPR REG11 is in Security subsystem registers Description, <br>
                                                                                 Read the adcout data for BIST mode test ADC, <br>
                                                                                 The obtained (ADCout / 32768.0) has to be approximately equal to 0.4 */
-    #endif /* (HSE_PLATFORM == HSE_S32R41X) */
+    #endif /* HSE_S32R41X */
 
-    #if (HSE_PLATFORM == HSE_SAF85XX)
     /** @brief    HSE XOSC Switch Status bits (register address is #HSE_GPR_XOSC_CLK_SWITCH_STATUS_ADDRESS) */
-    #define HSE_GPR_XOSC_CLK_SWITCH_STATUS_ADDRESS (0x400D8950UL)   /**< @brief HSE-GPR REG13 is in Subsystem Register Description */
+    #if (HSE_PLATFORM == HSE_SAF85XX) || (HSE_PLATFORM == HSE_SAF86XX)
+    #define HSE_GPR_XOSC_CLK_SWITCH_STATUS_ADDRESS (0x400D8950UL)   /**< @brief HSE-GPR REG13 is in Security subsystem registers Description */
+
     typedef uint32_t hseXoscClkSwitchStatus_t;
     #define HSE_XOSC_CLK_SWITCH_NOT_RUN_STATUS     ((hseXoscClkSwitchStatus_t)0U)       /**< @brief HSE-GPR REG13[2:1] = 00b when XOSC clock switch not run */
     #define HSE_XOSC_CLK_SWITCH_FAIL_STATUS        ((hseXoscClkSwitchStatus_t)1U << 1U) /**< @brief HSE-GPR REG13[2:1] = 01b; this bit is set when the XOSC clock switch is failed */
     #define HSE_XOSC_CLK_SWITCH_SUCCESS_STATUS     ((hseXoscClkSwitchStatus_t)1U << 2U) /**< @brief HSE-GPR REG13[2:1] = 10b; this bit is set when the XOSC clock switch is successful */
-    #endif /* HSE_PLATFORM == HSE_SAF85XX */
+    #endif /* HSE_SAF85XX || HSE_SAF86XX */
 #endif /* HSE_M */
 
 #if defined(HSE_B)
@@ -112,7 +114,7 @@ extern "C"{
 
 
 
-#if (HSE_PLATFORM != HSE_SAF85XX)
+#if (HSE_PLATFORM != HSE_SAF85XX) && (HSE_PLATFORM != HSE_SAF86XX)
     /** @brief    HSE Tamper Config Status bits (register address is #HSE_GPR_STATUS_ADDRESS)
      *  @details  This status is updated when a tamper is configured by HSE during initialization or via attribute.
      *            The host can get the HSE Tamper Config Status reading the #HSE_GPR_STATUS_ADDRESS register.
@@ -135,21 +137,20 @@ extern "C"{
 
     #ifdef HSE_SPT_PHYSICAL_TAMPER_CONFIG
     #define HSE_PHYSICAL_TAMPER_CONFIG_STATUS    ((hseTamperConfigStatus_t)1U << 1U) /**< @brief HSE-GPR REG3[1]- this bit is set when the physical tamper is configured.
-                                                                                                Note that the application must configure SIUL2 Pads before enabling the tamper. */
+                                                                                                 Note that the application must configure SIUL2 Pads before enabling the tamper. */
     #endif /* HSE_SPT_PHYSICAL_TAMPER_CONFIG */
 
-    #if (defined(HSE_SPT_TEMP_SENS_VIO_CONFIG) || defined(HSE_SPT_TMU_REG_CONFIG))
+    #if defined(HSE_SPT_TMU_REG_CONFIG)
     #define HSE_TEMP_SENSOR_VIO_CONFIG_STATUS    ((hseTamperConfigStatus_t)1U << 2U) /**< @brief HSE-GPR REG3[2] this bit is set when the
-                                                                                                temperature Sensor violation is configured. */
-    #endif /* HSE_SPT_TEMP_SENS_VIO_CONFIG || HSE_SPT_TMU_REG_CONFIG */
+                                                                                                 temperature sensor violation is configured. */
+    #endif /* HSE_SPT_TMU_REG_CONFIG */
 
     #if defined(HSE_SPT_TMU_CMU)
     #define TMU_CMU_TAMPER_CONFIG_STATUS         ((hseTamperConfigStatus_t)1U << 3U) /**< @brief HSE-GPR REG3[3]- this bit is set when the TMU_CMU tamper is configured.
-                                                                                                The TMU clock must be configured in this range
-                                                                                                - s32r41x: 11.4Mhz  < clock frequency < 131.25Mhz. */
+                                                                                                 The TMU clock must be configured in this range:
+                                                                                                 - s32r41x: 11.4Mhz  < clock frequency < 131.25Mhz. */
     #endif /* HSE_SPT_TMU_CMU */
-#endif /* (HSE_PLATFORM != HSE_SAF85XX) */
-
+#endif /* !HSE_SAF85XX || !HSE_SAF86XX */
 
 /*==================================================================================================
 *                                             ENUMS

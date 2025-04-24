@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -106,10 +106,31 @@ extern "C"{
 #define NULL_HOST_ADDR                    ((HOST_ADDR)0UL)
 #endif
 
+#if !defined(NO_STDINT_H)
+
 /** @brief Pointer to Host address  */
 #ifndef HSE_PTR_TO_HOST_ADDR
     #define HSE_PTR_TO_HOST_ADDR(ptr)     ((HOST_ADDR)(uintptr_t)(ptr))
 #endif
+
+/** @brief Host address to Pointer  */
+#ifndef HSE_HOST_ADDR_TO_PTR
+    #define HSE_HOST_ADDR_TO_PTR(type, val) ((type *)(uintptr_t)(val))
+#endif
+
+#else
+
+/** @brief Pointer to Host address  */
+#ifndef HSE_PTR_TO_HOST_ADDR
+    #define HSE_PTR_TO_HOST_ADDR(ptr)     ((HOST_ADDR)(void *)(ptr))
+#endif
+
+/** @brief Host address to Pointer  */
+#ifndef HSE_HOST_ADDR_TO_PTR
+    #define HSE_HOST_ADDR_TO_PTR(type, val) ((type *)(void *)(val))
+#endif
+
+#endif /* !defined(NO_STDINT_H) */
 
 typedef uint8_t hseDigestLen_t;
 #define HSE_SHA1_DIGEST_LEN               ((hseDigestLen_t)20U)  /**<  @brief SHA1 digest length in bytes */

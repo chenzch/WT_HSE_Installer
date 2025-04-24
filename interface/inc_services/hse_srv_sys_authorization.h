@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -58,27 +58,33 @@ extern "C"{
 /** @brief HSE System Access rights.
  *   @details
  *    After reset (default access rights):
- *    | Life Cycle | NVM CUST keys   | NVM OEM keys  | RAM keys  | NVM config|
- *    |-----------:|:---------------:|:-------------:|:---------:|:---------:|
- *    |CUST_DEL    |      SU/U*      |       U       |   SU/U*   |   SU/U*   |
- *    |OEM_PROD    |        U        |     SU/U*     |   SU/U*   |   SU/U*   |
- *    |IN_FIELD    |        U        |       U       |     U     |     U     |
- *
+ *    | Life Cycle | Exec rights     | 
+ *    |-----------:|:---------------:|
+ *    |CUST_DEL    |      SU/U*      | 
+ *    |OEM_PROD    |      SU/U**     |
+ *    |IN_FIELD    |        U        | 
+ *   
+ *    @note: 
+ *     - U* means that the CUST_START_AS_USER policy attribute is set (refer to #hseAttrExtendCustSecurityPolicy_t.startAsUser).
+ *     - U** means that the OEM_START_AS_USER policy attribute is set (refer to #hseAttrExtendOemSecurityPolicy_t.startAsUser).
+ *     - After reset, the SU rights are granted for both key management and HSE configuration updates (see #HSE_SYS_AUTH_ALL).
+ * 
  *   After reset, the SYS rights are synchronized with Life cycle (LC) and CUST/OEM START_AS_USER policy attributes (see CUST/OEM policy attributes).
  *      - if LC = CUST_DEL:
- *           - if CUST_START_AS_USER policy = FALSE, CUST SuperUser rights are granted (CUST NVM Keys / NVM configuration updates)
+ *           - if CUST_START_AS_USER policy = FALSE, CUST SuperUser rights are granted for both key management and HSE configuration updates (refer to #hseSysAuthOption_t)
  *           - otherwise User rights are granted (U* in the above table)
  *      - if LC = OEM_DEL:
- *           - if OEM_START_AS_USER policy = FALSE, OEM SuperUser rights are granted (OEM NVM Keys / NVM configuration updates)
- *           - otherwise User rights are granted (U* in the above table)
+ *           - if OEM_START_AS_USER policy = FALSE, OEM SuperUser rights are granted for both key management and HSE configuration updates (refer to #hseSysAuthOption_t)
+ *           - otherwise User rights are granted (U** in the above table)
  *      - if LC = IN_FIELD, User rights are granted.
  */
 typedef uint8_t hseSysRights_t;
-/** @brief SuperUser rights: can install/update CUST/OEM NVM keys or RAM keys using less restrictions. <br>
-           CUST/OEM SuperUser restrictions are specific to CUST_DEL/OEM_PROD Life cycle. */
+/** @brief SuperUser rights: less restrictions apply for key installation/updates or/and HSE configuration. <br>
+           The SU rights can be CUST or OEM depending on the life cycle (on reset) or the owner of the authorization key (when SYS authorization is used) . */
 #define HSE_RIGHTS_SUPER_USER           ((hseSysRights_t)1U)
-/** @brief User rights: can install/update NVM/RAM keys using high restrictions. <br>
-           User restrictions are specific to IN_FILED life cycle. */
+/** @brief User rights: high restrictions apply for key installation/updates or HSE configuration. <br>
+           User restrictions are specific to IN_FILED life cycle or when the CUST/OEM START_AS_USER policy attribute is set 
+           (refer to #hseAttrExtendCustSecurityPolicy_t and #hseAttrExtendOemSecurityPolicy_t).*/
 #define HSE_RIGHTS_USER                 ((hseSysRights_t)2U)
 
 /** @brief   HSE System Authorization options.
@@ -89,7 +95,7 @@ typedef uint8_t hseSysAuthOption_t;
  *         If SuperUser rights are granted, Key Management services can be performed using less restrictions. */
 #define HSE_SYS_AUTH_KEY_MGMT            ((hseSysAuthOption_t)(1U << 0U))
 /** @brief Request SuperUser rights to update/install the HSE NVM tables/attributes which are stored in SYS-IMAGE(HSE_H/M)/internal flash(HSE_B) (e.g. SMR, CR, OTFAD, NVM attributes). <br>
- *         If SuperUser rights are granted, updates of NVM configuration will be permitted. */
+ *         If SuperUser rights are granted, updates of NVM configuration is permitted. */
 #define HSE_SYS_AUTH_NVM_CONFIG          ((hseSysAuthOption_t)(1U << 1U))
 /** @brief Request SuperUser rights for both Key Management services and NVM configuration updates. */
 #define HSE_SYS_AUTH_ALL                 ((HSE_SYS_AUTH_KEY_MGMT) | (HSE_SYS_AUTH_NVM_CONFIG))
@@ -109,7 +115,7 @@ typedef uint8_t hseSysAuthOption_t;
 /**
  * @brief     HSE SYS Authorization Request service.
  * @details
- *    During run-time (IN_FIELD Life cycle), the User rights can be temporarily elevated to SuperUser(CUST/OEM) using HSE Authorization Request/Response.
+ *    During run-time, the User rights can be temporarily elevated to SuperUser(CUST/OEM) using HSE Authorization Request/Response.
  *    - CUST SuperUser rights are granted using an authorization key owned by CUST.
  *    - OEM SuperUser rights are granted using an authorization key owned by OEM.
  *    - The User rights (non privilege rights) can be requested without authorization.

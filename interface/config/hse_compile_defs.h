@@ -8,7 +8,7 @@
 *   @{
 */
 /*==================================================================================================
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -64,6 +64,7 @@ extern "C"{
 #define HSE_S32K3X4          5U     /**< @brief  S32K3X4 platform. */
 #define HSE_S32R41X          6U     /**< @brief  S32R41X platform. */
 #define HSE_SAF85XX          7U     /**< @brief  SAF85XX platform. */
+#define HSE_SAF86XX          8U     /**< @brief  SAF86XX platform. */
 #define HSE_S32K3X1          12U    /**< @brief  S32K3X1 platform. */
 #define HSE_S32K3X2          13U    /**< @brief  S32K3X2 platform. */
 #define HSE_S32K358          14U    /**< @brief  S32K3X8 platform renamed to S32K358 platform. */
@@ -73,6 +74,7 @@ extern "C"{
 #define HSE_S32G3XX          20U    /**< @brief  S32G3XX platform. */
 #define HSE_S32ZE            30U    /**< @brief  S32ZE   platforms. */
 #define HSE_S32Z1XX          31U    /**< @brief  S32Z1XX platform */
+
 
 
 /*==================================================================================================

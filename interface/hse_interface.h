@@ -7,7 +7,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -188,7 +188,9 @@ extern "C"{
 #endif /* HSE_SPT_SELF_TEST */
 
     #define HSE_SRV_ID_CANCEL                   ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00A50004UL))  /**< @brief Cancel a one-pass or streaming service on a specific channel. Data structure used: #hseCancelSrv_t. */
+#ifdef HSE_SPT_OTA_FIRMWARE_UPDATE
     #define HSE_SRV_ID_FIRMWARE_UPDATE          ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000005UL))  /**< @brief HSE firmware update. Data structure used: #hseFirmwareUpdateSrv_t. */
+#endif /*HSE_SPT_OTA_FIRMWARE_UPDATE*/
     #define HSE_SRV_ID_SYS_AUTH_REQ             ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000006UL))  /**< @brief Perform a SYS Authorization request. Data structure used: #hseSysAuthorizationReqSrv_t. */
     #define HSE_SRV_ID_SYS_AUTH_RESP            ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000007UL))  /**< @brief Send the SYS Authorization response. Data structure used: #hseSysAuthorizationRespSrv_t. */
     #define HSE_SRV_ID_BOOT_DATA_IMAGE_SIGN     ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000008UL))  /**< @brief Boot Data image sign (e.g. for HSE_H/M, IVT/DCD/ST/LPDDR4(S32Z/E devices)/AppBSB image; for HSE_B, IVT/AppBSB image). Data structure used: #hseBootDataImageSignSrv_t. */
@@ -219,20 +221,27 @@ extern "C"{
     #define HSE_SRV_ID_TRIM_PASSWORD_PROVISION    ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000020UL))  /**< @brief Provide a trim password to allow the read for fuses that can't be read (by default) by the customer. Data structure used: #hseTrimPasswordProvision_t. */
 #endif
 
+    #define HSE_SRV_ON_DEMAND_ANTI_RBC_UPDATE   ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000022UL))  /**< @brief Trigger on demand anti-rollback counter updates in fuses. Data structure used: #hseOnDemandAntiRbcUpdateSrv_t. */
+    #ifdef HSE_SPT_OTA_FIRMWARE_UPDATE
+    #define HSE_SRV_ID_FIRMWARE_VERIFY          ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000030UL))  /**< @brief Verifies the Blue or Pink FW image in SRAM or external flash. Data structure used:  #hseFirmwareVerifySrv_t */
+    #endif /* HSE_SPT_OTA_FIRMWARE_UPDATE */
+
+#endif /* HSE_SPT_FLASHLESS_DEV */
+
     #ifdef HSE_SPT_MSC_KEYSTORE
     #define HSE_SRV_ID_CONFIG_KHTT              ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000019UL))  /**< @brief Configure the Key Handle Translation Table (KHTT). Data structure used: #hseConfigKHTTSrv_t. */
     #define HSE_SRV_ID_PUSH_MSC_KEYS            ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000021UL))  /**< @brief Push one or more HSE keys in ACE key store. Data structure used: #hsePushMscKeySrv_t. */
     #endif /* HSE_SPT_MSC_KEYSTORE */
-#endif /* HSE_SPT_FLASHLESS_DEV */
 
 #ifdef HSE_SPT_INTERNAL_FLASH_DEV /* HSE_B device */
+
     #define HSE_SRV_ID_ERASE_HSE_NVM_DATA       ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000050UL))  /**< @brief Erase HSE Data Flash (only for HSE_B). This service is only allowed in CUST_DEL LC. Data structure used: #hseEraseNvmDataSrv_t. */
 
     #ifdef HSE_SPT_ERASE_FW
     #define HSE_SRV_ID_ERASE_FW                 ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000057UL))  /**< @brief Erase Sys-Img, Backup FW as well Current running HSE FW from code flash. Data Structure used: #hseEraseFwSrv_t */
     #endif /* HSE_SPT_ERASE_FW */
 
-    #define HSE_SRV_ID_ACTIVATE_PASSIVE_BLOCK   ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000051UL))  /**< @brief Application request to switch passive flash block area (only for HSE_B). No data structure used. */
+    #define HSE_SRV_ID_ACTIVATE_PASSIVE_BLOCK   ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000051UL))  /**< @brief Application request to switch passive flash block area (only for HSE_B). This service requires SuperUser rights. No data structure used. */
 
     #ifdef HSE_SPT_OTA_SBAF_UPDATE
     #define HSE_SRV_ID_SBAF_UPDATE              ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000053UL))  /**< @brief SBAF firmware update request. Data structure used: #hseSbafUpdateSrv_t. */
@@ -243,19 +252,23 @@ extern "C"{
     #endif /* HSE_SPT_FW_INTEGRITY_CHECK */
 
     #ifdef HSE_SPT_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH
-    #define HSE_SRV_ID_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH       ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000055UL))  /**< @brief Application requests the firmware to write the NVM keys from RAM mirrored keystore into the data flash. This service has no parameters. */
+    #define HSE_SRV_ID_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH       ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000055UL))  /**< @brief Application requests the firmware to write the NVM keys from RAM mirrored keystore into the data flash. Data structure used: #hsePublishNvmKeystoreRamToFlashSrv_t. */
     #endif /* HSE_SPT_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH */
 
 #endif /* HSE_SPT_INTERNAL_FLASH_DEV */
 
-#ifdef HSE_SPT_MONOTONIC_COUNTERS
+#if defined(HSE_SPT_MONOTONIC_COUNTERS) && !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS)
     #define HSE_SRV_ID_CONFIG_COUNTER           ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000052UL))  /**< @brief Configure the secure counter (only for HSE_B). This service requires SuperUser rights. Data structure used: #hseConfigSecCounterSrv_t. */
-#endif /* HSE_SPT_MONOTONIC_COUNTERS */
+#endif /* defined(HSE_SPT_MONOTONIC_COUNTERS) && !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS) */
 
 
 #ifdef HSE_SPT_TMU_REG_CONFIG
     #define HSE_SRV_ID_TMU_REG_CONFIG           ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000056UL))  /**< @brief TMU register configuration. Data structure used: #hseTmuRegConfigSrv_t */
 #endif /* HSE_SPT_TMU_REG_CONFIG */
+
+#ifdef HSE_SPT_SENSOR_ARMING
+    #define HSE_SRV_ID_ON_DEMAND_SENSOR_ARMING  ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00000058UL))  /**< @brief On-demand Sensor Arming/Disarming. Data structure used: #hseOnDemandSensorArming_t */
+#endif /* HSE_SPT_SENSOR_ARMING */
 
 /*-------- Service class 0x01: key management services -------------*/
 #ifdef HSE_SPT_ECC_USER_CURVES
@@ -366,10 +379,10 @@ extern "C"{
 #endif /* HSE_SPT_RANDOM */
 
 /*-------- Service class 0x04: monotonic counter management --------*/
-#ifdef HSE_SPT_MONOTONIC_COUNTERS
+#if defined(HSE_SPT_MONOTONIC_COUNTERS) && !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS)
     #define HSE_SRV_ID_INCREMENT_COUNTER        ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00A50400UL))  /**< @brief Increment a monotonic counter. Data structure used: #hseIncrementCounterSrv_t. */
     #define HSE_SRV_ID_READ_COUNTER             ((hseSrvId_t)(HSE_SRV_VER_0 | 0x00A50401UL))  /**< @brief Read a monotonic counter. Data structure used: #hseReadCounterSrv_t. */
-#endif /* HSE_SPT_MONOTONIC_COUNTERS*/
+#endif /* defined(HSE_SPT_MONOTONIC_COUNTERS) && !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS) */
 
 /*-------- Service class 0x05: secure memory regions management ----*/
 #ifdef HSE_SPT_SMR_CR
@@ -440,6 +453,9 @@ typedef struct
             hseCancelSrv_t                  cancelSrvReq;           /**< @brief Request to cancel a one-pass or streaming service on a specific channel */
         #ifdef HSE_SPT_OTA_FIRMWARE_UPDATE
             hseFirmwareUpdateSrv_t          firmwareUpdateReq;      /**< @brief Request to HSE firmware update. */
+            #ifdef HSE_SPT_FLASHLESS_DEV
+            hseFirmwareVerifySrv_t          firmwareVerifyReq;      /**< @brief Request to Verify the Blue or Pink FW image in SRAM or external flash.*/
+            #endif
         #endif
         /*--------System authorization services--------*/
             hseSysAuthorizationReqSrv_t     sysAuthorizationReq;    /**< @brief Perform an SYS Authorization Request */
@@ -451,27 +467,31 @@ typedef struct
         #ifdef HSE_SPT_STREAM_CTX_IMPORT_EXPORT
             hseImportExportStreamCtxSrv_t   importExportStreamCtx;  /**< @brief Request to import/export a streaming context. */
         #endif
+        #ifdef HSE_SPT_MSC_KEYSTORE
+            hseConfigKHTTSrv_t              configKHTT;             /**< @brief Configure the Key Handle Translation Table (KHTT). */
+            hsePushMscKeySrv_t              pushMscKey;             /**< @brief Push one or more HSE keys in ACE key store */
+        #endif /* HSE_SPT_MSC_KEYSTORE*/
         #ifdef HSE_SPT_FLASHLESS_DEV /* HSE_H/M device */
             hsePublishSysImageSrv_t         publishSysImageReq;     /**< @brief Request to Publish a NVM SYS-IMAGE (only for HSE_H/M). */
             hseGetSysImageSizeSrv_t         getSysImageSizeReq;     /**< @brief Request to get SYS-IMAGE size (only for HSE_H/M). */
             hseVerifySysImageSrv_t          verifySysImageReq;      /**< @brief Request to Verify SYS-IMAGE after it is stored in external flash (only for HSE_H/M). */
             #ifdef HSE_SPT_MONOTONIC_COUNTERS
             hsePublishLoadCntTblSrv_t       publishLoadCntTblReq;   /**< @brief Request to publish/load the NVM container for the  Monotonic Counter table (only for HSE_H/M). */
-            #endif/*HSE_SPT_MONOTONIC_COUNTERS*/
+            #endif/* HSE_SPT_MONOTONIC_COUNTERS */
             #ifdef HSE_SPT_OTFAD
             hseInstallOtfadContextSrv_t     installOtfadReq;        /**< @brief Request to install an OTFAD context (only for HSE_H/M). */
             hseActivateOtfadContextSrv_t    activateOtfadReq;       /**< @brief Request to activate on-demand an already installed OTFAD context (only for HSE_H/M). */
             hseGetOtfadContextSrv_t         getOtfadCtxReq;         /**< @brief Request to get OTFAD context information (only for HSE_H/M). */
             #endif /* end HSE_SPT_OTFAD */
             hsePrepareForStandBySrv_t       prepareForStandByReq;   /**< @brief Request HSE to prepare for Stand-By mode (only for HSE_H/M). */
-            #ifdef HSE_SPT_MSC_KEYSTORE
-            hseConfigKHTTSrv_t              configKHTT;            /**< @brief Configure the Key Handle Translation Table (KHTT). */
-            hsePushMscKeySrv_t              pushMscKey;            /**< @brief Push one or more HSE keys in ACE key store */
-            #endif /* HSE_SPT_MSC_KEYSTORE*/
+            hseOnDemandAntiRbcUpdateSrv_t   onDemandAntiRbcUpdateReq;  /**< @brief Request on-demand an update of the anti-rollback counter. */
         #endif /* end HSE_SPT_FLASHLESS_DEV */
-
         #ifdef HSE_SPT_INTERNAL_FLASH_DEV /* HSE_B device */
             hseEraseNvmDataSrv_t            eraseNvmDataReq;        /**< @brief Request to reset HSE data flash. Only allowed in CUST_DEL LC */
+
+            #ifdef HSE_SPT_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH
+            hsePublishNvmKeystoreRamToFlashSrv_t publishNvmKeystoreRamToFlashReq;        /**< @brief Request to publish the NVM keystore in RAM to NVM SYS-IMAGE */
+            #endif /* HSE_SPT_PUBLISH_NVM_KEYSTORE_RAM_TO_FLASH */
 
             #ifdef HSE_SPT_OTA_SBAF_UPDATE
             hseSbafUpdateSrv_t              sbafUpdateReq;         /**< @brief Request to SBAF firmware update. */
@@ -480,12 +500,15 @@ typedef struct
             #ifdef HSE_SPT_ERASE_FW
             hseEraseFwSrv_t            eraseFwReq;                /**< @brief Request to erase sys-img, backup, current firmware. Only allowed in CUST_DEL LC */
             #endif /* HSE_SPT_ERASE_FW */
-
         #endif /* HSE_SPT_INTERNAL_FLASH_DEV */
 
         #ifdef HSE_SPT_TMU_REG_CONFIG
             hseTmuRegConfigSrv_t            tmuRegConfigReq;       /**< @brief TMU register configuration */
         #endif /* HSE_SPT_TMU_REG_CONFIG */
+
+        #ifdef HSE_SPT_SENSOR_ARMING
+            hseOnDemandSensorArming_t         onDemandSensorArmingReq;       /**< @brief On-demand sensor arming service. */
+        #endif /* HSE_SPT_SENSOR_ARMING */
 
         #ifdef HSE_SPT_TRIM_PASSWORD_PROVISION
             hseTrimPasswordProvision_t        trimPasswordReq;       /**< @brief Request to verify trim password to enable read access for certain system fuses (e.g trim values, MIDR etc). */
@@ -572,11 +595,11 @@ typedef struct
             hseGetRandomNumSrv_t            getRandomNumReq;        /**< @brief Request to random number generation */
         #endif
         /*--------HSE monotonic counters--------*/
-        #ifdef HSE_SPT_MONOTONIC_COUNTERS
+        #if defined(HSE_SPT_MONOTONIC_COUNTERS) && !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS)
             hseIncrementCounterSrv_t        incCounterReq;          /**< @brief Request to increment a monotonic counter */
             hseReadCounterSrv_t             readCounterReq;         /**< @brief Request to read a monotonic counter */
             hseConfigSecCounterSrv_t        configSecCounter;       /**< @brief Request to configure a secure counter */
-        #endif
+        #endif /* defined(HSE_SPT_MONOTONIC_COUNTERS) && !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS) */
         /*--------Secure Memory Regions (SMR) management--------*/
         #ifdef HSE_SPT_SMR_CR
             hseSmrEntryInstallSrv_t         smrEntryInstallReq;     /**< @brief Request to install a Secure Memory Region (SMR) table entry. */

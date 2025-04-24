@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -189,10 +189,10 @@ typedef struct
  *  @note
  *  - Key flags (of key properties) are always applied.
  *  - The keys can be generated as follow:
- *  1. SuperUser key restrictions:
+ *  1. Restrictions for SuperUser rights:
  *      - NVM keys can only be generated in empty slots (an erase shall be performed in advance)
  *      - RAM keys can always be generated (RAM keys can be overwritten)
- *  2. User key restrictions:
+ *  2. Restrictions for User rights:
  *      - NVM keys can NOT be generated.
  *      - RAM keys can always be generated (RAM keys can be overwritten)
  *  */

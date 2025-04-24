@@ -9,7 +9,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -30,9 +30,11 @@ extern "C"{
     /* Define at compile time the header file containing the definition for custom types from stdint */
     #include CUSTOM_STDINT_H
 #else
+    #if !defined(NO_STDINT_H)
     /* Default - include stdint.h */
-    #include <stdint.h>
-    #include <stdbool.h>
+        #include <stdint.h>
+        #include <stdbool.h>
+    #endif /* !defined(NO_STDINT_H) */
 #endif
 
 /* Standard typedefs used by header files, based on ISO C standard */
@@ -74,3 +76,4 @@ typedef uint8_t bool_t;
 #endif /*  STD_TYPEDEFS_H */
 
 /** @} */
+

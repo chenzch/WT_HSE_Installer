@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2022 NXP.
+*   Copyright 2022-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -85,7 +85,7 @@ typedef uint16_t hseTmuRegOp_t;
 *
 *  @note 
 *  Temperature calculation formula:
-*  - SAF85XX: -42C <---> +152C
+*  - SAF85XX, SAF86XX: -42C <---> +152C
 *      - for Temp < 0,  Lower Threshold  =  Temp_DegC * 64 + 2^16
 *      - for Temp > 0,  Higher Threshold =  Temp_DegC * 64 <br>
 *  Lower  Threshold : -42C * 64 + 2^16    = F580h <br>
@@ -109,13 +109,13 @@ typedef uint16_t hseTmuRegOp_t;
 *  | TMFTRCR          | 0x4008C04C |   NA                                                                                                                                   |
 *  | TMHTITR          | 0x4008C050 |   NA                                                                                                                                   |
 *  | TMHTATR          | 0x4008C054 |   NA                                                                                                                                   |
-*  | TMHTACTR         | 0x4008C058 |  Allowed OP: HSE_TMU_REG_WRITE32; <br> SAF85XX: Min: F580h(-42C), Max: 2600h(152C), bit[0,15]; <br> S32R41: Min: E4h  (-45C), Max: 1ACh (155C), bit[0,8]; <br> (the rest of the bit are ignored)   |
+*  | TMHTACTR         | 0x4008C058 |  Allowed OP: HSE_TMU_REG_WRITE32; <br> SAF85XX, SAF86XX: Min: F580h(-42C), Max: 2600h(152C), bit[0,15]; <br> S32R41: Min: E4h  (-45C), Max: 1ACh (155C), bit[0,8]; <br> (the rest of the bit are ignored)   |
 *  | TMLTITR          | 0x4008C060 |   NA                                                                                                                                   |
 *  | TMLTATR          | 0x4008C064 |   NA                                                                                                                                   |
-*  | TMLTACTR         | 0x4008C068 |  Allowed OP: HSE_TMU_REG_WRITE32; <br> SAF85XX: Min: F580h(-42C), Max: 2600h(152C), bit[0,15]; <br> S32R41: Min: E4h  (-45C), Max: 1ACh (155C), bit[0,8]; <br> (the rest of the bit are ignored)   |
+*  | TMLTACTR         | 0x4008C068 |  Allowed OP: HSE_TMU_REG_WRITE32; <br> SAF85XX, SAF86XX: Min: F580h(-42C), Max: 2600h(152C), bit[0,15]; <br> S32R41: Min: E4h  (-45C), Max: 1ACh (155C), bit[0,8]; <br> (the rest of the bit are ignored)   |
 *  | TMRTRCTR         | 0x4008C070 |  Allowed OP: HSE_TMU_REG_WRITE32                                                                                                       |
 *  | TMFTRCTR         | 0x4008C074 |  Allowed OP: HSE_TMU_REG_WRITE32                                                                                                       |
-*  | TMCFG0R          | 0x4008C400 |  Only Valid for SAF85XX; <br> Allowed OP : HSE_TMU_REG_WRITE32; <br> Changeable bits: bit[0,1] (the rest of the bit are ignored)       |
+*  | TMCFG0R          | 0x4008C400 |  Only Valid for SAF85XX, SAF86XX; <br> Allowed OP : HSE_TMU_REG_WRITE32; <br> Changeable bits: bit[0,1] (the rest of the bit are ignored)       |
 *  | TTCFGR           | 0x4008C080 |  Only Valid for HSE_S32R41X; <br> Allowed OP : HSE_TMU_REG_WRITE32; <br> Changeable bits: [0,3] (the rest of the bit are ignored)   
 */
 typedef struct

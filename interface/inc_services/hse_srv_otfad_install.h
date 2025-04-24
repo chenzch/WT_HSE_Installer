@@ -12,7 +12,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -118,7 +118,12 @@ typedef struct
 
 /** @brief HSE OTFAD/IEE_DDR Install Context service (update or add new entry).
  *  @details This service installs an existing OTFAD/IEE_DDR context or add a new one.
- *  @note SuperUser rights (for NVM Configuration) are needed to perform this service.
+ *  @note
+ *  - SuperUser rights (for NVM Configuration) are needed to perform this service.
+ *  - For S32ZE devices that have more than one instance (see #hseOtfadInstance_t):
+ *      - Either OTFAD0 (QSPI flash) or OTFAD1/IEE (LPDDR flash) can be configured and used.
+ *      - If external memory is QSPI flash (quad, octal, hyper modes), then OTFAD0 (QSPI0 interface) entry can be configured.
+ *      - If external memory is LPDDR flash, then either IEE (LPDDR interface) or/and OTFAD1 (QSPI1 interface) can be configured.
  */
 typedef struct
 {
@@ -126,10 +131,9 @@ typedef struct
                       I can be defined up to #HSE_NUM_OF_OTFAD_ENTRIES contexts (per OTFAD instance) and up to #HSE_NUM_OF_IEE_DDR_ENTRIES for IEE_DDR instance (if supported) */
     uint8_t              otfadIdx ;
     /** @brief INPUT: Identifies the OTFAD or IEE_DDR instance (refer to #hseOtfadInstance_t). it shall be between 0 and #HSE_NUM_OF_OTFAD_INSTANCES.
-     *                @note
-     *                - S32ZE devices have more than one OTFAD instances.
-     *                - If IEE_DDR for flash decrypt is supported (see #HSE_SPT_IEE_DDR_FLASH), the last instance (see #HSE_IEE_DDR_INSTANCE_2)
-     *                  is used to configure the IEE DDR. This instance contains #HSE_NUM_OF_IEE_DDR_ENTRIES contexts.*/
+     *                If IEE_DDR for flash decrypt is supported (see #HSE_SPT_IEE_DDR_FLASH), the last instance (see #HSE_IEE_DDR_INSTANCE_2)
+     *                is used to configure the IEE_DDR. This instance contains #HSE_NUM_OF_IEE_DDR_ENTRIES contexts.
+     */
     hseOtfadInstance_t   otfadInstance;
     uint8_t              reserved[2];
     /** @brief INPUT: Address to hseOtfadContext_t that contains the configuration properties of OTFAD/IEE_DDR context */

@@ -7,7 +7,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -63,7 +63,8 @@ typedef uint32_t hseError_t;
 #define HSE_WA_RNG_NOT_INIT                 ((hseError_t)1UL << 10U) /**< @brief RNG is not initialized. Services depending on the RNG may be delayed as HSE attempts RNG re-initialization. */
 
 #ifdef HSE_SPT_FLASHLESS_DEV /* HSE_H/M */
-#define HSE_WA_PUBLISH_COUNTER_TBL          ((hseError_t)1UL << 11U) /**< @brief The application shall publish and store the monotonic counter table. */
+#define HSE_WA_PUBLISH_COUNTER_TBL             ((hseError_t)1UL << 11U) /**< @brief The application shall publish and store the monotonic counter table. */
+#define HSE_WA_OTP_FUSE_WRITE_FAILURE_ON_BOOT  ((hseError_t)1UL << 12U) /**< @brief At start-up, the the fuse write operation (anti-rollback counter update) failed. A destructive reset is needed. */
 #endif /*HSE_SPT_FLASHLESS_DEV*/
 
 /**@}*/
@@ -84,22 +85,25 @@ typedef uint32_t hseError_t;
 typedef uint32_t hseHostEvent_t;
 
 /** @brief This event is sent by the host to notify HSE after it configures the external peripherals at init-time.
- *  @note     This host event is applicable only at start-up:
- *           - When BOOT_SEQ == 0, until the HSE sets HSE_STATUS_INIT_OK
- *           - Or, when BOOT_SEQ == 1 and the POST_BOOT SMRs are used, after HSE sets #HSE_STATUS_BOOT_OK, until #HSE_STATUS_INIT_OK is set.
- *           - In the above cases,for HSE_B/H/M (except SAF85XX), if the #HSE_HOST_PERIPH_CONFIG_DONE is not received within 5 seconds (computed at maximum frequency), the HSE execution continues.
- *           - Or, for SAF85XX if the #HSE_HOST_PERIPH_CONFIG_DONE is not received within 240 milliseconds (computed at maximum frequency), the HSE execution continues.
+ *  @note  This host event is applicable only at start-up:
+ *           1. When BOOT_SEQ == 0, until the HSE sets HSE_STATUS_INIT_OK
+ *           2. Or, when BOOT_SEQ == 1 and the POST_BOOT SMRs are used, after HSE sets #HSE_STATUS_BOOT_OK, until #HSE_STATUS_INIT_OK is set.
+ *           3. In the above cases,for HSE_B/H/M (except SAF85XX, SAF86XX), if the #HSE_HOST_PERIPH_CONFIG_DONE is not received within 5 seconds (computed at maximum frequency), the HSE execution continues.
+ *           4. Or, for SAF85XX, SAF86XX:
+ *               - If the #HSE_HOST_PERIPH_CONFIG_DONE is not received within 240 milliseconds (computed at maximum frequency), the HSE execution continues.
+ *               - It is recommended that the peripherals initialization to be done by the application after
+ *               #HSE_STATUS_INIT_OK signal is received from HSE firmware since this guarantees that the clock configuration is completed.
  **/
 #define HSE_HOST_PERIPH_CONFIG_DONE ((hseHostEvent_t)1UL << 0U)
 
 #ifdef HSE_M
 /** @brief This event is sent by the host to notify HSE to trigger TMU BIST selftest.
  *  @note     This host event is applicable only once and the #HSE_STATUS_INIT_OK bit must be set. <br>
- *            For S32R41X, the host must read the TRITSR[3-4]/TRATSR[3-4] register for the results. <br>
- *            For SAF85XX, the host must read the HSE-GPR register for the results <br>
- *                         #HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ1, <br>
- *                         #HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ2, <br>
- *                         #HSE_TMU_BIST_MODE_TEST_ADC_OUTPUT     <br>
+ *            For S32R41X,          the host must read the TRITSR[3-4]/TRATSR[3-4] register for the results. <br>
+ *            For SAF85XX, SAF86XX, the host must read the HSE-GPR register for the results <br>
+ *                                  #HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ1, <br>
+ *                                  #HSE_TMU_BIST_MODE_TEST_BJT_CORE_SEQ2, <br>
+ *                                  #HSE_TMU_BIST_MODE_TEST_ADC_OUTPUT     <br>
  **/
 #define HSE_TMU_BIST_SELFTEST       ((hseHostEvent_t)1UL << 1U)
 #endif /* HSE_M */

@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -85,10 +85,13 @@ typedef uint8_t hseRngClass_t;
                                  STRUCTURES AND OTHER TYPEDEFS
 ==================================================================================================*/
 /** @brief Get random number service.
- *  @note When the HSE_STATUS_RNG_INIT_OK status flag is cleared (failed), the call of any service
+ *  @note 
+ *      - When the HSE_STATUS_RNG_INIT_OK status flag is cleared (failed), the call of any service
  *        that requires a random number (e.g. Get Random Number, ECDSA signature generate etc.)
  *        triggers a RNG re-initialization before requesting the random number.
  *        If the RNG re-initialization is executed successfully, the HSE_STATUS_RNG_INIT_OK status flag is set to 1.
+ *      - If the HSE_SRV_RSP_RNG_INIT_IN_PROGRESS status is received (RNG initialization is in progress), 
+ *        the application must try when the HSE_STATUS_RNG_INIT_OK status is set in the FSR register. 
  * */
 typedef struct
 {

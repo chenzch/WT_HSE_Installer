@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -74,12 +74,16 @@ typedef uint8_t hsePublishOptions_t;
  *           The host application uses this service to request the SYS-IMAGE.
  *           The SYS-IMAGE is built from three Data Sets:
  *           - a Main Header (one flash page is allocated)
- *           - SMR/CR/OTFAD/NVM/IEE_DDR(if supported) attributes Data set; max size is max(8KB, flashPageSize).
- *           - NVM Key Store Data Set; max size is 32KB. <br>
- *           The last two data sets are protected against reply attacks using a version counter stored in fuses.
+ *           - SMR/CR/OTFAD/NVM/IEE_DDR(if supported) attributes Data set; max size is 8KB (or 12KB on S32ZE).
+ *           - NVM Key Store Data Set; it can be <= 32KB (28KB on SAF8XXX) <br>
+ *           If the rollback protection is enabled (refer to #hseOtpRollbackProtectionPolicy_t attribute), 
+ *           the last two data sets are protected against reply attacks using a version counter stored in fuses.
  *           The SYS-IMAGE size depends on the flash page size configured in the IVT (if set zero in IVT, HSE used 4KB as the default flash page size);
- *           it can be calculated as "flashPageSize + max(8KB, flashPageSize) + 32KB" (e.g for 4KB flash sector size, the SYS-IMAGE size is 44KB).
- *           The application can request to publish only all data sets at the same time. <br>
+ *           The maximum SYS-IMG size is:
+ *           - 44KB for S32G2/G3/R45/R41
+ *           - 48KB for S32ZE
+ *           - 40KB for SAF8XXX
+ *           For more details, refer to HSE Firmware Reference Manual provide on nxp.com > My NXP > Secure Files.  <br>
  *
  *      @note
  *           - The rollback protection for SYS-IMG can be disabled using #HSE_OTP_ROLLBACK_PROTECTION_POLICY_ATTR_ID attribute
@@ -91,11 +95,11 @@ typedef uint8_t hsePublishOptions_t;
  *                the anti-rollback counter will not be updated in fuses. If one of the Data Sets is updated,
  *                the counter is incremented (fuse counter+1) in image header. The counter will be updated also in fuses
  *                (when sys-image is loaded during start-up).
- *              - During a power cycle, the value of the anti-rollback counter is incremented with a maximum value of 1.
+ *              - The value of the anti-rollback counter is incremented in fuses with a maximum value of 1. The fuse counter 
+ *                can be updated at start-up or on demand, depending on the #hseOtpRollbackProtectionPolicy_t attribute configuration.
  *                (multiple update-publish requests in one power cycle will not burn more than one fuse).
  *                The VDD_EFUSE state is checked before the fuse write by reading the NCSPD_STAT register of the on-chip PMC module.
  *                The application shall provide read-only access (xRDC restriction) to HSE to read the NCSPD_STAT register.
- *           - For S32ZE, the SYS-IMG size is 48KB.
  *           - Depending on the size of the DataSet, not the entire flash page(s) is used. An empty space is reserved at the end of
  *             the DataSet (end of the last flash page of the DataSet) for further extention of the DataSet. These reserved empty
  *             spaces are not authenticated during SYS-IMG loading (e.g only relevant data is authenticated and encrypted).

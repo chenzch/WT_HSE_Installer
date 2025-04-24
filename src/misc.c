@@ -99,19 +99,14 @@ bool CheckSBAF(uint8_t socType) {
      */
     bool     ret     = false;
     uint64_t SBAFVer = *(uint64_t *)0x4039C020;
+    uint64_t CurrVer = 0x06000F0000000000UL;
+    CurrVer = CurrVer | ( (uint64_t)socType << 8UL );
     switch (socType) {
     case 0x05: // S32K344, S32K324, S32K314
-        if ((SBAFVer == (0x0004090000000500UL)) || (SBAFVer == (0x03000A0000000500UL))) {
-            ret = true;
-        }
-        break;
+    case 0x0C: // S32K311, S32K310
     case 0x0D: // S32K312, S32K342, S32K322, S32K341
-        if ((SBAFVer == (0x0000080000000D00UL)) || (SBAFVer == (0x0100090000000D00UL))) {
-            ret = true;
-        }
-        break;
     case 0x0E: // S32K358
-        if ((SBAFVer == (0x03000C0000000E00UL))) {
+        if (SBAFVer != CurrVer) {
             ret = true;
         }
         break;

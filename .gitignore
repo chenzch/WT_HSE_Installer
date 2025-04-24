@@ -116,9 +116,5 @@ dkms.conf
 .vscode/BROWSE.*
 *.gdb
 *.dump
-/Debug_ABSWAP_312/
-/Debug_ABSWAP_314/
-/Debug_FULLMEM_312/
-/Debug_FULLMEM_314/
-/Debug_ABSWAP_311/
-/Debug_FULLMEM_311/
+/Debug_ABSWAP_*/
+/Debug_FULLMEM_*/

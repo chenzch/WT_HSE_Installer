@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -56,23 +56,31 @@ extern "C"{
 /*==================================================================================================
 *                                      DEFINES AND MACROS
 ==================================================================================================*/
+
+/** @brief    Activate or not a specific configuration.
+ *  @details  Tells whether the HSE activate or not a specific configuration.
+ */
+typedef uint32_t hseAttrCfg_t;
+#define HSE_CFG_NO       ((hseAttrCfg_t)(0x0UL))                    /**< @brief NO, deactivate the configuration */
+#define HSE_CFG_YES      ((hseAttrCfg_t)(0xB7A5C365UL))             /**< @brief YES, activate the configuration  */
+
 /**  @brief   HSE attribute IDs.
  *   @details   The following attribute types are defined:
  *            - RO-ATTR - Read-Only attribute
  *            - OTP-ATTR - One Time Programmable; can be written only once (set FUSE/UTEST area)
  *            - OTP-ADVANCE-ATTR - One Time Programmable attribute that can only be advanced (e.g. LifeCycle)
- *            - NVM-RW-ATTR - System NVM attributes; can be read or written
+ *            - NVM-RW-ATTR - System NVM attributes; can be read or written.
  *            - SET-ONCE-ATTR- Once the attribute is set, it can not be changed until next reset (e.g. can be set once at initialization time)
  *
  * @note
- * - For HSE_H/M devices, if the NVM-RW attributes were updated, the SYS-IMAGE must be published and stored in external flash.
+ * - To set/update the OTP-ATTR or NVM-RW-ATTR attributes (except SET-ONCE-ATTR and OTP-ADVANCE-ATTR), the host needs SuperUser rights.
+ * - After setting the HSE_SECURE_LIFECYCLE_ATTR_ID attribute, a destructive reset is needed.
+ * - For HSE_H/M devices, if the NVM-RW-ATTR attributes were updated, the SYS-IMAGE must be published and stored in external flash.
  * - For HSE_H/M devices, in order to program fuses (OTP-ATTR and OTP-ADVANCE-ATTR) during development and potentially in the field, the application must supply power to the VDD_EFUSE pin of the device.
  *   This allows the programming operation to take place. If theVDD_EFUSE is not powered and the application tries to write a fuse, the HSE returns an error
  *   (HSE_SRV_RSP_FUSE_VDD_GND). The VDD_EFUSE state is checked before the fuse write by reading the NCSPD_STAT register of the on-chip PMC module.
  *   The application must provide read access (xRDC restriction) to HSE in order to be able to read the NCSPD_STAT register.
  *   For more details, refer to HSE FW Reference Manual.
- * - To set/update the OTP or NVM attributes (except SET-ONCE-ATTR and OTP-ADVANCE-ATTR), the host needs SuperUser rights.
- * - After setting the HSE_SECURE_LIFECYCLE_ATTR_ID attribute, a destructive reset is needed.
 */
 typedef uint16_t hseAttrId_t;
 
@@ -87,11 +95,15 @@ typedef uint16_t hseAttrId_t;
     #endif  /* defined(HSE_SPT_SMR_CR) || defined(HSE_SPT_BSB) */
     #define HSE_FW_BUILD_INFO_ATTR_ID                ((hseAttrId_t)4U)    /**< @brief RO-ATTR; HSE FW Build information (see #hseFwBuildInfo_t) */
 
+    #ifdef HSE_SPT_SENSOR_ARMING
+    #define HSE_SENSORS_STATE_ATTR_ID                ((hseAttrId_t)5U)    /**< @brief RO-ATTR; Returns the list of sensors that can be armed or disarmed ( see #hseSensorsStateAttr_t ) */
+    #endif /* HSE_SPT_SENSOR_ARMING */
+
     /* OTP-ATTR & OTP-ADVANCE-ATTR*/
     #define HSE_DEBUG_AUTH_MODE_ATTR_ID              ((hseAttrId_t)10U)   /**< @brief OTP-ATTR; Debug Authorization mode (see #hseAttrDebugAuthMode_t) */
     #define HSE_APP_DEBUG_KEY_ATTR_ID                ((hseAttrId_t)11U)   /**< @brief OTP-ATTR; Application Debug Key / Password (see #hseAttrApplDebugKey_t and #hseAttrSecureApplDebugKey_t) */
     #define HSE_SECURE_LIFECYCLE_ATTR_ID             ((hseAttrId_t)12U)   /**< @brief OTP-ADVANCE-ATTR; Secure Life-cycle (see #hseAttrSecureLifecycle_t) */
-    #define HSE_ENABLE_BOOT_AUTH_ATTR_ID             ((hseAttrId_t)13U)   /**< @brief OTP-ATTR; IVT/ DCD Authentication bit for HSE H and IVT Authentication bit for HSE M (see #hseAttrConfigBootAuth_t)  */
+    #define HSE_ENABLE_BOOT_AUTH_ATTR_ID             ((hseAttrId_t)13U)   /**< @brief OTP-ATTR; If this attribute bit is set, all the artifacts handled by BootROM(e.g IVT, DCD etc) must be authenticated. (see #hseAttrConfigBootAuth_t) */
 
     #ifdef HSE_SPT_CUST_SEC_POLICY
     #define HSE_EXTEND_CUST_SECURITY_POLICY_ATTR_ID  ((hseAttrId_t)14U)   /**< @brief OTP-ATTR & NVM-RW-ATTR; HSE security policies extension in CUST_DEL lifecycle for user with CUST SU rights (see #hseAttrExtendCustSecurityPolicy_t). \
@@ -109,7 +121,9 @@ typedef uint16_t hseAttrId_t;
     #define HSE_FAST_CMAC_MIN_TAG_BIT_LEN_ATTR_ID    ((hseAttrId_t)22U)   /**< @brief NVM-RW-ATTR; The minimum tag bit length that can be used for Fast CMAC verify/generate (see #hseAttrFastCmacMinTagBitLen_t) */
     #endif /* HSE_SPT_FAST_CMAC */
 
+    #if defined(HSE_SPT_SMR_CR)
     #define HSE_CORE_RESET_RELEASE_ATTR_ID           ((hseAttrId_t)23U)   /**< @brief NVM-RW-ATTR; Specifies Core Reset table parsing strategy (see #hseAttrCoreResetRelease_t) */
+    #endif /* HSE_SPT_SMR_CR */
 
     #ifdef HSE_SPT_KEY_MGMT_POLICIES
     #define HSE_RAM_PUB_KEY_IMPORT_POLICY_ATTR_ID    ((hseAttrId_t)24U)   /**< @brief NVM-RW-ATTR; Specifies RAM public keys import policy in advanced LCs (see #hseAttrRamPubKeyImportPolicy_t) */
@@ -119,6 +133,10 @@ typedef uint16_t hseAttrId_t;
     #define HSE_RESET_SOC_ON_TAMPER_ATTR_ID          ((hseAttrId_t)25U)   /**< @brief NVM-RW-ATTR; Reset Soc on tamper detection (see #hseResetSocOnTamper_t) */
     #endif /* HSE_SPT_RESET_SOC_ON_TAMPER_ATTR */
 
+    #ifdef HSE_SPT_SENSOR_ARMING
+    #define HSE_SENSOR_DISARMING_ON_STARTUP_ATTR_ID  ((hseAttrId_t)50U)   /**< @brief NVM-RW-ATTR; Keep the sensor armed or disarmed after booting ( see #hseSensorDisarmingAttr_t) */
+    #endif /* HSE_SPT_SENSOR_ARMING */
+
     /*----------------- END  Common (HSE_H/M/B) attributes --------------------*/
 
 #ifdef HSE_SPT_FLASHLESS_DEV
@@ -127,7 +145,7 @@ typedef uint16_t hseAttrId_t;
 #endif /* HSE_SPT_FLASHLESS_DEV */
 
     #ifdef HSE_SPT_APP_SPECIFIC_DATA_ATTR
-    #define HSE_APP_SPECIFIC_DATA_ATTR_ID               ((hseAttrId_t)27U)    /**< @brief NVM-RW-ATTR; Set an application-specific data of maximum #HSE_APP_SPECIFIC_DATA_MAX_BUFFER_SIZE bytes (see #hseAppSpecificData_t) */
+    #define HSE_APP_SPECIFIC_DATA_ATTR_ID               ((hseAttrId_t)27U)    /**< @brief NVM-RW-ATTR; Set an application-specific data of maximum HSE_APP_SPECIFIC_DATA_MAX_BUFFER_SIZE bytes (see #hseAppSpecificData_t) */
 
     #define HSE_DISABLE_APP_SPECIFIC_DATA_WRITE_ATTR_ID ((hseAttrId_t)28U)    /**< @brief SET-ONLY-ONCE-ATTR; Disable the write of APP_SPECIFIC_DATA attribute (see #hseDisableAppSpecificDataWrite_t) */
     #endif /* HSE_SPT_APP_SPECIFIC_DATA_ATTR */
@@ -148,6 +166,9 @@ typedef uint16_t hseAttrId_t;
     #define HSE_MEM_REGIONS_PROTECT_ATTR_ID          ((hseAttrId_t)31U)   /**< @brief SET-ONLY-ONCE-ATTR; Configures memory regions accessible through each MU (refer to #hseAttrAllMuMemRegions_t) */
     #endif /* HSE_SPT_MEM_REGION_PROTECT */
 
+    #define HSE_DISABLE_PAIRWISE_CONSISTENCY_TEST_ATTR_ID  ((hseAttrId_t)32U)   /**< @brief SET-ONLY-ONCE-ATTR; Disable the pair wise consistency test when calling import RSA/ECC key pair (see #hseDisablePairWiseConsistencyTest_t) */
+
+
     /*------------------------ HSE_H/M specific attributes ------------------------*/
 #if defined(HSE_SPT_FLASHLESS_DEV)
 
@@ -164,18 +185,20 @@ typedef uint16_t hseAttrId_t;
     #define HSE_SLOG_STATUS_ATTR_ID                  ((hseAttrId_t)104U)  /**< @brief RO-ATTR; Get the secure logging status (see #hseSlogStatus_t) */
     #endif /* HSE_SPT_SMR_SECURE_LOGGING */
 
+    #define HSE_RB_COUNTER_INFO_ATTR_ID             ((hseAttrId_t)105U)  /**< @brief RO-ATTR; Get the anti-rollback counters information (see #hseRbCounterInfo_t) */
+
     /* OTP-ATTR */
     #define HSE_APP_DEBUG_DIS_ATTR_ID                ((hseAttrId_t)200U)  /**< @brief OTP-ATTR; Disable Application Debug (see #hseAttrDisableAppDebug_t) */
+
+    #ifdef HSE_SPT_OTP_BOOT_SEQ_ATTR
+    #define HSE_OTP_BOOT_SEQ_ATTR_ID                 ((hseAttrId_t)201U)  /**< @brief OTP-ATTR; Configures OTP_BOOT_SEQ==1 (secure boot) (see #hseAttrOtpBootSeq_t) */
+    #endif /* HSE_SPT_OTP_BOOT_SEQ_ATTR */
 
     /* NVM-RW-ATTR */
     #ifdef HSE_SPT_SMR_SECURE_LOGGING
     #define HSE_SLOG_SMR_CONFIG_ATTR_ID              ((hseAttrId_t)301U)   /**< @brief NVM-RW-ATTR; To configure the SMR(s) linked with the secure logging (see #hseAttrSlogSmrCfg_t) */
     #endif /* HSE_SPT_SMR_SECURE_LOGGING */
 
-    /* SET-ONCE-ATTR*/
-    #ifdef HSE_SPT_TEMP_SENS_VIO_CONFIG
-    #define HSE_TEMP_SENSOR_VIO_CONFIG_ATTR_ID       ((hseAttrId_t)400U)  /**< @brief SET-ONLY-ONCE-ATTR; Enable the temperature sensor violation in HSE (see #hseTempSensVioConfig_t) */
-    #endif /* HSE_SPT_TEMP_SENS_VIO_CONFIG */
 
 #endif /* HSE_SPT_FLASHLESS_DEV */
     /*------------------------ END HSE_H/M specific attributes ---------------------*/
@@ -194,14 +217,6 @@ typedef uint16_t hseAttrId_t;
 
 #endif /* HSE_B */
     /*------------------------ END HSE_B specific attributes ---------------------*/
-
-
-/** @brief    Activate or not a specific configuration.
- * @details   Tells whether the HSE activate or not a specific configuration.
- */
-typedef uint32_t hseAttrCfg_t;
-#define HSE_CFG_NO       ((hseAttrCfg_t)(0x0UL))                    /**< @brief NO, deactivate the configuration */
-#define HSE_CFG_YES      ((hseAttrCfg_t)(0xB7A5C365UL))             /**< @brief YES, activate the configuration */
 
 /*==================================================================================================
 *                                             ENUMS
@@ -259,8 +274,8 @@ typedef struct
                                  HSE FW version
 ==================================================================================================*/
 /**
-* @brief          HSE FW version attribute (HSE_H/M/B attribute).
-*                 This is a READ-ONLY global attribute.
+* @brief          HSE FW version attribute (RO-ATTR attribute; refer to #hseAttrId_t).
+*
 */
 typedef struct
 {
@@ -285,7 +300,7 @@ typedef struct
 /*==================================================================================================
                                  HSE capabilities
 ==================================================================================================*/
-/** @brief    HSE capabilities bits definition.
+/** @brief    HSE capabilities bits definition (RO-ATTR attribute; refer to #hseAttrId_t).
  * @details   Provides information about the capabilities of HSE security blocks (list of what algorithms are supported).
  *            Each bit specifies an supported algorithm. The index for each bit in the attribute is defined by #hseAlgoCapIdx_t.
 */
@@ -297,8 +312,7 @@ typedef uint64_t hseAttrCapabilities_t;
                                  HSE FW build info
 ==================================================================================================*/
 /**
-* @brief          HSE FW build information attribute.
-*                 This is a READ-ONLY global attribute.
+* @brief          HSE FW build information attribute (RO-ATTR attribute; refer to #hseAttrId_t).
 */
 typedef struct
 {
@@ -307,10 +321,55 @@ typedef struct
     uint32_t    buildTime;                      /**< @brief  Build time in hexadecimal (hex(HHMMSS)) */
 } hseFwBuildInfo_t;
 
+
+/*==================================================================================================
+                                 Get the sensors that can be armed or disarmed
+==================================================================================================*/
+#ifdef HSE_SPT_SENSOR_ARMING
+/** @brief Possible states a security sensor can take. */
+typedef uint8_t hseSensorState_t;
+#define HSE_SENSOR_STATE_UNUSED          ((hseSensorState_t)0x00U)  /**< @brief The sensor is unused or not supported on the SoC. **/
+#define HSE_SENSOR_STATE_ARMED           ((hseSensorState_t)0xB5U)  /**< @brief The sensor is armed (enabled). **/
+#define HSE_SENSOR_STATE_DISARMED        ((hseSensorState_t)0x5AU)  /**< @brief The sensor is disarmed (disabled). **/
+
+/**
+* @brief    Get the state of the security sensors at runtime.
+* @details  Read-only attribute (HSE_SENSORS_STATE_ATTR_ID) used to fetch the status of the security sensors.
+*           Each sensor has assigned a byte in the sensorList[] list as follows:
+*           - sensorList[0]: the Analog Clock Monitoring Unit (ACMU).
+*           - sensorList[1]: the HSE Clock Monitoring Unit (HSE CMU).
+*           - sensorList[2]: the glitch detector sensor (GDET).
+*           - sensorList[3]: the Thermal Monitoring Unit (TMU).
+*           - sensorList[4]: the voltage detectors (LVD/HVD).
+*           - sensorList[5]: the PLL_AURORA (ADPLL CMU).
+*           - sensorList[6-7]: Reserved for future use.
+*
+*           @note
+*           - This is a READ-ONLY attribute.
+            - Supported sensors on each platform:
+*               - S32ZE:   GDET, HSE CMU, LVD/HVD
+*               - SAF85XX: GDET, HSE CMU, LVD/HVD, ACMU, TMU
+*               - SAF86XX: GDET, HSE CMU, LVD/HVD, ACMU, TMU, ADPLL CMU
+*               - S32R41:  GDET, HSE CMU, LVD/HVD
+*           - A sensor state value of HSE_SENSOR_STATE_UNUSED signifies that the sensor is not supported or configured on that specific SoC.
+            - A sensor state value of HSE_SENSOR_STATE_ARMED signifies that the sensor is enabled and actively monitoring the security state of the SoC.
+              When the sensor detects a violation, HSE goes to shutdown (for more details about HSE shutdown, refer HSE Firmware Reference Manual).
+            - A sensor state value of HSE_SENSOR_STATE_DISARMED signifies that the sensor is disabled.
+              Any violation detected by the sensor will be ignored and will not trigger an HSE shutdown.
+            - If #hseSensorDisarmingAttr_t attribute was not configured previously, the sensor list states represent the SoC default state of the sensors
+              at the end of the boot phase.
+*/
+typedef struct
+{
+    /** @brief Byte list of sensor states at runtime. Each byte reflects the sensor state at the moment the attribute is read from HSE. */
+    hseSensorState_t    sensorList[8U];
+} hseSensorsStateAttr_t;
+#endif /* HSE_SPT_SENSOR_ARMING */
+
 /*==================================================================================================
                                  SMR verification & Core-boot status
 ==================================================================================================*/
-/** @brief    The SMR and Core Boot status.
+/** @brief    The SMR and Core Boot status (RO-ATTR attribute; refer to #hseAttrId_t).
  * @details   Provides the following infomation:
  *            - SMR entry installation status corresponding to the entries present in SMR table (refer to #smrEntryInstallStatus)
  *            - SMR verification status corresponding to the entries present in SMR table (refer to #smrStatus[])
@@ -337,7 +396,7 @@ typedef struct
 #endif /*defined(HSE_SPT_SMR_CR) || defined(HSE_SPT_BSB) */
 
 #ifdef HSE_SPT_SMR_SECURE_LOGGING
-/** @brief    The secure logging SMR(s) configuration
+/** @brief    The secure logging SMR(s) configuration (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  * @details   This service configures the on-demand or periodic SMR(s) that must be verified for secure logging.
  *             Additionally, it enables the use of fuse or RAM for secure logging.
  * @note
@@ -351,6 +410,7 @@ typedef struct
  *   - A failure is logged if one of the following conditions is met:
  *     1. At start-up, when BOOT_SEQ == 1 and the secure boot (SMR or BSB) fails
  *     2. If any of the on-demand/runtime SMR specified in smrPeriodicOnDemand flags failed.
+ *   - IMPORTANT: if enableFuseUsage == HSE_CFG_YES and any periodic SMR is linked to SLOG, make sure VDD_EFUSE is always powered on.
  */
 typedef struct
 {
@@ -360,7 +420,7 @@ typedef struct
     uint8_t      reserved[8];
 } hseAttrSlogSmrCfg_t;
 
-/** @brief   The secure logging status
+/** @brief   The secure logging status(RO-ATTR attribute; refer to #hseAttrId_t).
  * @details  It provides the SMR failures and recoveries in fuse (or RAM if enableFuseUsage == HSE_CFG_NO).
  *           The secure logging is configured using #hseAttrSlogSmrCfg_t attribute.
  *           By default, the secure logging is using the RAM (it is not persistent in fuses)
@@ -369,7 +429,8 @@ typedef struct
  *           - Odd bits signals a recovery: sLog[bit#i + 1]    == 1 means the secure boot failure number i/2 was recovered
  *           - bit #7 is not used
  *           @note
- *           - Example of logging the secure boot failures and recoveries in fuse (bit #7 not used)
+ *              - Example of logging the secure boot failures and recoveries in fuse (bit #7 not used)
+ *
  * |  Bit position   |  b7 |  b6 |  b5 |  b4 |  b3 |  b2 |  b1 |  b0 |                        Remark                            |
  * |----------------:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---------------------------------------------------------|
  * | hseSlogStatus   |  X  |  0  |  0  |  0  |  0  |  0  |  0  |  0  | No secure boot failure logged                            |
@@ -381,41 +442,42 @@ typedef uint8_t hseSlogStatus_t;
 
 #endif /* HSE_SPT_SMR_SECURE_LOGGING */
 
+
 /*==================================================================================================
                                  Core Release Strategy
 ==================================================================================================*/
-/** @brief    The Core Reset release from reset method.
+/** @brief    The Core Reset release from reset method (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  * @details   Specifies the startup method for releasing the application core from reset. */
 typedef uint32_t hseAttrCoreResetRelease_t;
 #define HSE_CR_RELEASE_ALL_AT_ONCE        ((hseAttrCoreResetRelease_t)0xA5556933UL)  /**< @brief Cores are released all-at-once after the pre-boot verification phase is over */
-#define HSE_CR_RELEASE_ONE_BY_ONE         ((hseAttrCoreResetRelease_t)0xA5557555UL)  /**< @brief Cores are released from reset one-by-one after their respective pre-boot phase has finalized successfully
-                                                                                                 (i.e. the SMR entries linked to the core via CR table have been loaded and verified). <br>
-                                                                                                 The cores are released in ascending order of their indicies in the Core Reset table. <br>
-                                                                                                 Flashless devices (e.g. HSE_H/M) limitations:
-                                                                                                  - Only the first Core Reset entry can be booted from SD/MMC.
+#define HSE_CR_RELEASE_ONE_BY_ONE         ((hseAttrCoreResetRelease_t)0xA5557555UL)  /**< @brief Cores are released from reset one-by-one after their respective pre-boot phase has finalized successfully \
+                                                                                                 (i.e. the SMR entries linked to the core via CR table have been loaded and verified). <br> \
+                                                                                                 The cores are released in ascending order of their indicies in the Core Reset table. <br> \
+                                                                                                 Flashless devices (e.g. HSE_H/M) limitations: \
+                                                                                                  - Only the first Core Reset entry can be booted from SD/MMC. \
                                                                                                   - The system clocks and QSPI configurations shall not be changed by the core(s) booted until #HSE_STATUS_BOOT_OK status is set. */
 
 /*==================================================================================================
                                  Debug Authorization Mode bit
 ==================================================================================================*/
-/** @brief    Debug Authorization Mode bit (HSE_H/M/B attribute).
+/** @brief    Debug Authorization Mode bit (OTP-ATTR attribute; refer to #hseAttrId_t).
  * @details   Tells whether the Application debug authorization will be password based or challenge-response based.
 */
 typedef uint8_t hseAttrDebugAuthMode_t;
-#define HSE_DEBUG_AUTH_MODE_PW          ((hseAttrDebugAuthMode_t)0x0U)            /**< @brief Password based application debug authorization mode.
-                                                                                     - Read: Application debug authorization will be password based.
+#define HSE_DEBUG_AUTH_MODE_PW          ((hseAttrDebugAuthMode_t)0x0U)            /**< @brief Password based application debug authorization mode. \
+                                                                                     - Read: Application debug authorization will be password based. \
                                                                                      - Write: Does not affect application debug authorization mode at all. */
-#define HSE_DEBUG_AUTH_MODE_CR          ((hseAttrDebugAuthMode_t)0x1U)            /**< @brief Challenge-Response based application debug authorization mode.
-                                                                                     - Read: Application debug authorization will be challenge-response based.
-                                                                                     - Write: Enables challenge-response application debug authorization mode.
-                                                                                              Once this mode is enabled, it cannot be disabled.
+#define HSE_DEBUG_AUTH_MODE_CR          ((hseAttrDebugAuthMode_t)0x1U)            /**< @brief Challenge-Response based application debug authorization mode. \
+                                                                                     - Read: Application debug authorization will be challenge-response based. \
+                                                                                     - Write: Enables challenge-response application debug authorization mode. \
+                                                                                              Once this mode is enabled, it cannot be disabled. \
                                                                                               Operation allowed in CUST_DEL, OEM_PROD and IN_FIELD LCs only. */
 
 
 /*==================================================================================================
                                  Application Debug Key/ Password definition-
 ==================================================================================================*/
-/** @brief    Application Debug Key/ Password definition (HSE_H/M/B attribute).
+/** @brief    Application Debug Key/ Password definition  (OTP-ATTR attribute; refer to #hseAttrId_t).
  * @details   It is an 128-bit Application Debug Key/ Password to be set by the host in CUST_DEL LifeCycle.
  *            - Read: Not allowed if ADKP has not been written yet. After it has been written, first 16 bytes of SHA2_224(ADKP) can be requested via get ADKP attribute service.
  *            - Write: ADKP can be updated only once. The operation allowed only in CUST_DEL LifeCycle.
@@ -424,7 +486,7 @@ typedef uint8_t hseAttrDebugAuthMode_t;
  */
 typedef uint8_t hseAttrApplDebugKey_t[16];
 
-/** @brief    Secure Application Debug Key/ Password definition (HSE_H/M/B attribute).
+/** @brief    Secure Application Debug Key/ Password definition (OTP-ATTR attribute; refer to #hseAttrId_t).
  * @details   It is the key handle referencing a key already installed in HSE. It must be an AES 128-bits key from RAM or NVM key catalogs.
  *            - Read: Allowed only as the hash over the ADKP (see Read from #hseAttrApplDebugKey_t).
  *            - Write:
@@ -437,7 +499,7 @@ typedef hseKeyHandle_t hseAttrSecureApplDebugKey_t;
 /*==================================================================================================
                                  HSE Secure Lifecycle
 ==================================================================================================*/
-/** @brief    HSE secure lifecycle definition.
+/** @brief    HSE secure lifecycle definition (OTP-ADVANCE-ATTR attribute; refer to #hseAttrId_t).
  * @details   Represents HSE secure lifecycle. The lifecycle can be advanced only in forward direction.
  *            Warnings:
  *            - The lifecycle is read/scanned by hardware during the reset phase. Hence, a reset is recommended
@@ -445,58 +507,58 @@ typedef hseKeyHandle_t hseAttrSecureApplDebugKey_t;
  *            - The lifecycle can be advanced to OEM_PROD/IN_FIELD only if the #HSE_APP_DEBUG_KEY_ATTR_ID attribute was set before.
  */
 typedef uint8_t hseAttrSecureLifecycle_t;
-#define HSE_LC_CUST_DEL                 ((hseAttrSecureLifecycle_t)0x4U)    /**< @brief Customer Delivery Lifecycle.
-                                                                                - Read: The current LC is CUST_DEL.
+#define HSE_LC_CUST_DEL                 ((hseAttrSecureLifecycle_t)0x4U)    /**< @brief Customer Delivery Lifecycle. \
+                                                                                - Read: The current LC is CUST_DEL. \
                                                                                 - Write: Advancement to this LC is not allowed (through HSE Firmware). */
-#define HSE_LC_OEM_PROD                 ((hseAttrSecureLifecycle_t)0x8U)    /**< @brief OEM Production Lifecycle.
-                                                                                - Read: The current LC is OEM_PROD.
-                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL LC).
+#define HSE_LC_OEM_PROD                 ((hseAttrSecureLifecycle_t)0x8U)    /**< @brief OEM Production Lifecycle. \
+                                                                                - Read: The current LC is OEM_PROD. \
+                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL LC). \
                                                                                          The key catalogs MUST be configured before advancing to this lifecycle. */
-#define HSE_LC_IN_FIELD                 ((hseAttrSecureLifecycle_t)0x10U)    /**< @brief In-Field Lifecycle.
-                                                                                - Read: The current LC is IN_FIELD.
-                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL, OEM_PROD LCs).
+#define HSE_LC_IN_FIELD                 ((hseAttrSecureLifecycle_t)0x10U)    /**< @brief In-Field Lifecycle. \
+                                                                                - Read: The current LC is IN_FIELD. \
+                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL, OEM_PROD LCs). \
                                                                                          The key catalogs MUST be configured before advancing to this lifecycle. */
-#define HSE_LC_PRE_FA                   ((hseAttrSecureLifecycle_t)0x14U)    /**< @brief Pre-Failure Analysis Lifecycle.
-                                                                                - Read: The current LC is Pre-FA.
+#define HSE_LC_PRE_FA                   ((hseAttrSecureLifecycle_t)0x14U)    /**< @brief Pre-Failure Analysis Lifecycle. \
+                                                                                - Read: The current LC is Pre-FA. \
                                                                                 - Write: Advancement from/to this LC is NOT allowed (through HSE Firmware).*/
-#define HSE_LC_SIMULATED_OEM_PROD       ((hseAttrSecureLifecycle_t)0xA6U)   /**< @brief Simulated OEM_PROD to avoid writing in FUSE/UTEST. A system reset will revert LC to FUSE/UTEST value.
-                                                                                - Read: The current LC is OEM_PROD.
-                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL LC).
+#define HSE_LC_SIMULATED_OEM_PROD       ((hseAttrSecureLifecycle_t)0xA6U)   /**< @brief Simulated OEM_PROD to avoid writing in FUSE/UTEST. A system reset will revert LC to FUSE/UTEST value. \
+                                                                                - Read: The current LC is OEM_PROD. \
+                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL LC). \
                                                                                          The key catalogs MUST be configured before advancing to this lifecycle. */
-#define HSE_LC_SIMULATED_IN_FIELD       ((hseAttrSecureLifecycle_t)0xA7U)   /**< @brief Simulated IN_FIELD to avoid writing in FUSE/UTEST. A system reset will revert LC to FUSE/UTEST value.
-                                                                                - Read: The current LC is IN_FIELD.
-                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL, SIMULATED_OEM_PROD LCs).
+#define HSE_LC_SIMULATED_IN_FIELD       ((hseAttrSecureLifecycle_t)0xA7U)   /**< @brief Simulated IN_FIELD to avoid writing in FUSE/UTEST. A system reset will revert LC to FUSE/UTEST value. \
+                                                                                - Read: The current LC is IN_FIELD. \
+                                                                                - Write: Advancement to this LC is allowed only once (from CUST_DEL, SIMULATED_OEM_PROD LCs). \
                                                                                          The key catalogs MUST be configured before advancing to this lifecycle. */
 
 
 /*==================================================================================================
                                  IVT Boot Authentication configuration
 ==================================================================================================*/
-/** @brief    Boot Authentication bit.
+/** @brief    Boot Authentication bit (OTP-ATTR attribute; refer to #hseAttrId_t).
  * @details   Value used by Boot ROM to check whether the IVT data needs be authenticated.
 */
 typedef uint8_t hseAttrConfigBootAuth_t;
-#define HSE_IVT_NO_AUTH             ((hseAttrConfigBootAuth_t)0x0U)            /**< @brief
-                                                                                    For HSE_H/M, the IVT/DCD/ST is not authenticated by BootROM:
-                                                                                     - Read: IVT/DCD/ST is not authenticated by BootROM.
-                                                                                     - Write: Does not affect IVT/ DCD authentication value at all.
-
-                                                                                    For HSE_B, the IVT configuration is not authenticated by Secure BAF:
-                                                                                     - Read: IVT is not authenticated by Secure BAF.
-                                                                                     - Write: Does not affect IVT configuration authentication value at all.
+#define HSE_IVT_NO_AUTH             ((hseAttrConfigBootAuth_t)0x0U)            /**< @brief \
+                                                                                    For HSE_H/M, the IVT/DCD/ST is not authenticated by BootROM: \
+                                                                                     - Read: IVT/DCD/ST is not authenticated by BootROM. \
+                                                                                     - Write: Does not affect IVT/ DCD authentication value at all. \
+                                                                                   \
+                                                                                    For HSE_B, the IVT configuration is not authenticated by Secure BAF: \
+                                                                                     - Read: IVT is not authenticated by Secure BAF. \
+                                                                                     - Write: Does not affect IVT configuration authentication value at all. \
                                                                                */
-#define HSE_IVT_AUTH                ((hseAttrConfigBootAuth_t)0x1U)            /**< @brief
-                                                                                    For HSE_H/M, the IVT/DCD/ST to be authenticated by BootROM:
-                                                                                    - Read: IVT/DCD/ST is authenticated by BootROM.
-                                                                                    - Write: Sets IVT/DCD/ST authentication value.
-                                                                                    Once this value is set, it cannot be cleared back.
-                                                                                    Operation allowed in CUST_DEL, OEM_PROD & IN_FIELD LCs only.
-
-                                                                                    For HSE_B, the IVT to be authenticated by Secure BAF:
-                                                                                     - Read: IVT will be authenticated by Secure BAF.
-                                                                                     - Write: Sets IVT authentication value.
-                                                                                    Once this value is set, it cannot be cleared back.
-                                                                                    Operation allowed in CUST_DEL, OEM_PROD & IN_FIELD LCs only.
+#define HSE_IVT_AUTH                ((hseAttrConfigBootAuth_t)0x1U)            /**< @brief \
+                                                                                    For HSE_H/M, the IVT/DCD/ST to be authenticated by BootROM: \
+                                                                                    - Read: IVT/DCD/ST is authenticated by BootROM. \
+                                                                                    - Write: Sets IVT/DCD/ST authentication value. \
+                                                                                    Once this value is set, it cannot be cleared back. \
+                                                                                    Operation allowed in CUST_DEL, OEM_PROD & IN_FIELD LCs only. \
+                                                                                    \
+                                                                                    For HSE_B, the IVT to be authenticated by Secure BAF: \
+                                                                                     - Read: IVT will be authenticated by Secure BAF. \
+                                                                                     - Write: Sets IVT authentication value. \
+                                                                                    Once this value is set, it cannot be cleared back. \
+                                                                                    Operation allowed in CUST_DEL, OEM_PROD & IN_FIELD LCs only. \
                                                                                */
 
 
@@ -536,9 +598,11 @@ typedef struct
     uint8_t reserved[60];
 } hseAttrMUInstanceConfig_t;
 
-/** @brief    MU Configurations and XRDC configuration definition.
+/** @brief    MU Configurations and XRDC configuration definition (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  * @details   Configures the MU interfaces and XRDC configurations for the HOST Interface Memory.
  *
+ *            @note:
+ *            - SU rights are needed
  */
 typedef struct
 {
@@ -558,7 +622,7 @@ typedef uint32_t hseMemRegAccess_t;
 #define HSE_MEM_REG_ACCESS_MASK_INOUT  ((hseMemRegAccess_t)(HSE_MEM_REG_ACCESS_MASK_IN | HSE_MEM_REG_ACCESS_MASK_OUT))
 
 /**
-* @brief        HSE Memory region
+* @brief        HSE Memory region.
 * @details      Defines base address and length of a region
 */
 typedef struct
@@ -593,7 +657,7 @@ typedef struct
 } hseAttrMuMemRegions_t;
 
 /**
-* @brief        HSE Memory regions protection attribute for all HSE MUs.
+* @brief        HSE Memory regions protection attribute for all HSE MUs (SET-ONLY-ONCE-ATTR attribute; refer to #hseAttrId_t).
 * @details      HSE Memory regions protection is a service used to prevent memory accesses
 *               between disallowed bus masters through HSE MUs.
 *               HSE uses these regions to validate the input/output parameters
@@ -621,11 +685,14 @@ typedef struct
 ==================================================================================================*/
 #ifdef HSE_SPT_KEY_MGMT_POLICIES
 
-/** @brief    HSE key management policy regarding RAM public keys import.
+/** @brief    HSE key management policy regarding RAM public keys import (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  *  @details  Determines whether public keys can be imported without authentication in advanced LCs. <br>
  *            Default value is HSE_KM_POLICY_DEFAULT, i.e. HSE does not allow public key import in RAM, when having User rights, if they are not an authenticated key container. <br>
  *            Otherwise, if set to HSE_KM_POLICY_ALLOW_RAM_PUB_KEY_IMPORT, RAM public keys are allowed to be imported without authentication, regardless of the access rights. <br>
  *            SU access rights with configuration privileges are required to update this attribute value.
+ *
+ *  @note:
+ *            - SU rights are needed
 */
 typedef uint32_t hseAttrRamPubKeyImportPolicy_t;
 #define HSE_KM_POLICY_DEFAULT                   ((hseAttrRamPubKeyImportPolicy_t)(0x4E8BD124UL))
@@ -638,7 +705,7 @@ typedef uint32_t hseAttrRamPubKeyImportPolicy_t;
 ==================================================================================================*/
 #ifdef HSE_SPT_CUST_SEC_POLICY
 
-/** @brief    HSE extend CUST security policies attribute definition.
+/** @brief    HSE extend CUST security policies attribute definition (OTP-ATTR & NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  * @details   Determines whether certain security policies are extended in HSE Firmware or not; applies only for CUST_DEL LC.
  *            - Read: Tells which extended security policies are set or not.
  *            - Write:
@@ -671,7 +738,7 @@ typedef struct
 ==================================================================================================*/
 #ifdef HSE_SPT_OEM_SEC_POLICY
 
-/** @brief    HSE extend OEM security policies attribute definition.
+/** @brief    HSE extend OEM security policies attribute definition (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  * @details   Determines whether certain security policies are extended in HSE Firmware or not in OEM_PROD LC.
  *            - Read: Tells which extended security policies are set or not.
  *            - Write:
@@ -694,9 +761,9 @@ typedef struct
 ==================================================================================================*/
 #ifdef HSE_SPT_FAST_CMAC
 
-/** @brief  Minimal tag bit length for Fast CMAC service.
- *  @details By default, the minimal tag bit length that can be used for the Fast CMAC service (see hseFastCMACSrv_t) is 64 bits.
- *           This attribute can be set to be able to use the Fast CMAC service with the tag bit length less than 64 bits.
+/** @brief  Minimal tag bit length for Fast CMAC service (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
+ *  @details By default, the minimal tag bit length that can be used for the Fast CMAC service (see hseFastCMACSrv_t) is #HSE_DEFAULT_MIN_FAST_CMAC_TAG_BITLEN bits.
+ *           This attribute can be set to be able to use the Fast CMAC service with the tag bit length less than #HSE_DEFAULT_MIN_FAST_CMAC_TAG_BITLEN bits.
  *           The value to be set must be provided in bits. */
 typedef uint8_t hseAttrFastCmacMinTagBitLen_t;
 
@@ -741,7 +808,7 @@ typedef uint8_t hseTamperPolarity_t;
  * correct GPIO pin.
  * For some SOC types, only one active tamper can be
  * supported. Please refer to #HSE_NUM_OF_PHYSICAL_TAMPER_INSTANCES to see how many active tamper are supported.
- * @note #HSE_TAMPER_ACTIVE_TWO is not valid for devices - S32G2, S32K3xx
+ * @note #HSE_TAMPER_ACTIVE_TWO is not supported.
  * */
 typedef uint8_t hseOutputPinConfig_t;
 #define HSE_TAMPER_PASSIVE                  ((hseOutputPinConfig_t)(0U))
@@ -796,7 +863,7 @@ typedef struct
     uint8_t reserved[3];                            /**< @brief HSE reserved */
 } hseAttrPhysicalTamper_t;
 
-/** @brief    Physical Tamper Configurations.
+/** @brief    Physical Tamper Configurations (SET-ONLY-ONCE-ATTR attribute; refer to #hseAttrId_t).
  * @details   Configures all available physical tamper instances.
  */
 typedef struct
@@ -811,7 +878,7 @@ typedef struct
 ==================================================================================================*/
 #ifdef HSE_SPT_APP_SPECIFIC_DATA_ATTR
 
-/** @brief   Application-Specific Data stored in SYS-IMG (persistent memory)
+/** @brief   Application-Specific Data stored in SYS-IMG (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
 *   @details It can be used to store persistent application data.
 *
 *   @note
@@ -821,8 +888,6 @@ typedef struct
 *     1. If writing was disabled previously (see #hseDisableAppSpecificDataWrite_t)
 *     2. At start-up, when BOOT_SEQ == 1 and the secure boot (SMR or BSB) fails
 *     3. If any of the on-demand/runtime SMR specified in smrPeriodicOnDemand flags failed.
-*     @note
-*     This attribute can be set only having SU rights.
 */
 typedef struct
 {
@@ -836,7 +901,7 @@ typedef struct
     uint32_t smrPeriodicOnDemand;
 }hseAppSpecificData_t;
 
-/** @brief   Disable the writing of Application-Specific Data attribute
+/** @brief   Disable the writing of Application-Specific Data attribute (SET-ONLY-ONCE-ATTR attribute; refer to #hseAttrId_t).
 *   @details The write of Application-Specific Data attribute can be disabled
 *            by setting this attribute as #HSE_CFG_YES.
 * @note
@@ -860,7 +925,7 @@ typedef hseAttrCfg_t hseDisableAppSpecificDataWrite_t;
 /*==================================================================================================
                                  HSE-Firmware Size
 ==================================================================================================*/
-/** @brief    HSE-Firmware Size.
+/** @brief    HSE-Firmware Size (RO-ATTR attribute; refer to #hseAttrId_t).
  * @details   Size of HSE-Firmware in bytes.
  */
 typedef uint32_t hseAttrHseFwSize_t;
@@ -869,8 +934,8 @@ typedef uint32_t hseAttrHseFwSize_t;
 /*==================================================================================================
                                  Anti-rollback counter updates left
 ==================================================================================================*/
-/** @brief    Anti-rollback counter updates left.
- * @details   There are available 158 anti-rollback counter updates (fuses) for the key store and HSE firmware.
+/** @brief    Anti-rollback counter updates left (RO-ATTR attribute; refer to #hseAttrId_t).
+ *  @details  There are available 158 (or 190 on S32ZE) anti-rollback counter updates (fuses) for the key store and HSE firmware.
  *            After 158 updates, the key store and HSE firmware are not protected against rollbacks.
  */
 typedef uint32_t hseAvailAntiRollbackCounter_t;
@@ -879,64 +944,93 @@ typedef uint32_t hseAvailAntiRollbackCounter_t;
 /*==================================================================================================
                                  HSE-Firmware used partition on load
 ==================================================================================================*/
-/** @brief    HSE-Firmware used partition on load.
- * @details   Specified the partition (primary or backup) used by BootRom to load the HSE Firmware.
+/** @brief    HSE-Firmware used partition on load (RO-ATTR attribute; refer to #hseAttrId_t).
+ *  @details   Specified the partition (primary or backup) used by BootRom to load the HSE Firmware.
  */
 typedef uint8_t hseAttrFwPartition_t;
 #define HSE_FW_PARTITION_PRIMARY        ((hseAttrFwPartition_t)0x1U)           /**< @brief HSE firmware was loaded from primary partition */
 #define HSE_FW_PARTITION_BACKUP         ((hseAttrFwPartition_t)0x2U)           /**< @brief HSE firmware was loaded from back-up partition */
 
+/*==================================================================================================
+                                 Anti-rollback counter Info
+==================================================================================================*/
+/** @brief    Provides details about SYS-IMG and FW Blue image anti-rollback counters (RBC) from fuses and image's headers (RO-ATTR attribute; refer to #hseAttrId_t).
+ * @details   This attribute (read-only) can be read by the host to return:
+ *            - the OTP counter for SYS-IMG (from fuses)
+ *            - the OTP counter for HSE FW (from fuses)
+ *            - the counter from the loaded SYS-IMG header (returns 0xFF if the SYS-IMG was not loaded)
+ *            - the counter from the loaded Blue FW image header (returns 0xFF if the FW was loaded from pink FW image)
+ */
+typedef struct
+{
+    /** @brief   The Anti-rollback counter for SYS-IMG (from fuses) */
+    uint8_t sysImgOtpCounter;
+    /** @brief   The Anti-rollback counter for HSE FW (from fuses) */
+    uint8_t fwImgOtpCounter;
+    /** @brief   The counter from the loaded SYS-IMG header. If the SYS-IMG was not loaded, it returns 0xFF.  */
+    uint8_t sysImgHeaderCounter;
+    /** @brief   The counter from the loaded Blue FW image header. If the FW was loaded from pink FW image, it returns 0xFF. */
+    uint8_t fwImgHeaderCounter;
+} hseRbCounterInfo_t;
+
 
 /*==================================================================================================
                                  Application debug disable
 ==================================================================================================*/
-/** @brief    Application debug disable.
+/** @brief    Application debug disable (OTP-ATTR attribute; refer to #hseAttrId_t).
  * @details   Tells if the Application debug is disabled or not for OEM_PROD and/or IN_FIELD life-cycles.
 */
 typedef uint8_t hseAttrDisableAppDebug_t;
-#define HSE_APP_DEBUG_DIS_NONE          ((hseAttrDisableAppDebug_t)0x0U)       /**< @brief Application Debug not disabled.
-                                                                                    - Read: Application Debug is not disabled for OEM_PROD/ IN_FIELD LC.
-                                                                                    Application debug can be opened in OEM_PROD/ IN_FIELD LC using the debug
-                                                                                    authorization mechanism.
+#define HSE_APP_DEBUG_DIS_NONE          ((hseAttrDisableAppDebug_t)0x0U)       /**< @brief Application Debug not disabled. \
+                                                                                    - Read: Application Debug is not disabled for OEM_PROD/ IN_FIELD LC.\
+                                                                                    Application debug can be opened in OEM_PROD/ IN_FIELD LC using the debug \
+                                                                                    authorization mechanism. \
                                                                                     - Write: Does not disable the application debug. */
-#define HSE_APP_DEBUG_DIS_OEM           ((hseAttrDisableAppDebug_t)0x1U)       /**< @brief Application Debug disabled for OEM_PROD LC.
-                                                                                    - Read: Application Debug is disabled for OEM_PROD LC.
-                                                                                    Application debug can never be opened in OEM_PROD LC.
-                                                                                    - Write: Disables application debug for OEM_PROD LC only.
+#define HSE_APP_DEBUG_DIS_OEM           ((hseAttrDisableAppDebug_t)0x1U)       /**< @brief Application Debug disabled for OEM_PROD LC. \
+                                                                                    - Read: Application Debug is disabled for OEM_PROD LC. \
+                                                                                    Application debug can never be opened in OEM_PROD LC. \
+                                                                                    - Write: Disables application debug for OEM_PROD LC only. \
                                                                                     Operation allowed in CUST_DEL, OEM_PROD & IN_FIELD LCs only. */
-#define HSE_APP_DEBUG_DIS_FLD           ((hseAttrDisableAppDebug_t)0x2U)       /**< @brief Application Debug disabled for IN_FIELD LC.
-                                                                                    - Read: Application Debug is disabled for IN_FIELD LC.
-                                                                                    Application debug can never be opened in IN_FIELD LC.
-                                                                                    - Write: Disables application debug for IN_FIELD LC only.
+#define HSE_APP_DEBUG_DIS_FLD           ((hseAttrDisableAppDebug_t)0x2U)       /**< @brief Application Debug disabled for IN_FIELD LC. \
+                                                                                    - Read: Application Debug is disabled for IN_FIELD LC. \
+                                                                                    Application debug can never be opened in IN_FIELD LC. \
+                                                                                    - Write: Disables application debug for IN_FIELD LC only. \
                                                                                     Operation allowed in CUST_DEL, OEM_PROD & IN_FIELD LCs only. */
-#define HSE_APP_DEBUG_DIS_OEM_FLD       ((hseAttrDisableAppDebug_t)0x3U)       /**< @brief Application Debug disabled for both OEM_PROD & IN_FIELD LCs.
-                                                                                    - Read: Application Debug is disabled for both OEM_PROD & IN_FIELD LCs.
-                                                                                    Application debug can never be opened in OEM_PROD & IN_FIELD LCs.
-                                                                                     -Write: Disables application debug for both OEM_PROD & IN_FIELD LCs.
+#define HSE_APP_DEBUG_DIS_OEM_FLD       ((hseAttrDisableAppDebug_t)0x3U)       /**< @brief Application Debug disabled for both OEM_PROD & IN_FIELD LCs. \
+                                                                                    - Read: Application Debug is disabled for both OEM_PROD & IN_FIELD LCs. \
+                                                                                    Application debug can never be opened in OEM_PROD & IN_FIELD LCs. \
+                                                                                     -Write: Disables application debug for both OEM_PROD & IN_FIELD LCs. \
                                                                                     Operation allowed in CUST_DEL, OEM_PROD & IN_FIELD LCs only. */
-
 
 /*==================================================================================================
-                                 Temperature Sensor violation configuration
+                                 OTP_BOOT_SEQ configuration
 ==================================================================================================*/
-#ifdef HSE_SPT_TEMP_SENS_VIO_CONFIG
-/** @brief    Temperature Sensor violation configuration byte.
- * @details   Once the violation is enabled in HSE, it can not be cleared
- *            until next reset. User must configure the Temperature Monitoring Unit (TMU)
- *            before giving the attribute. It can also be configured via DCD configuration.
- *            The HSE Firmware signals an Fatal error (see hseError_t bits) if this tamper is detected.
- *            User is recommended to protect the TMU Registers (see REG_PROT on Soc) after the configuration.
- *            The tamper configuration status is available by reading the HSE_GPR_STATUS_ADDRESS register (refer to #hseTamperConfigStatus_t).
- *            Four TMU Monitors are mapped to HSE: Average High Critical Temperature TMU Monitor,
- *            Average Low Critical Temperature TMU Monitor, Rising Rate Critical Temperature TMU Monitor,
- *            Falling Rate Critical Temperature TMU Monitor.
- *
-*/
-typedef uint8_t hseTempSensVioConfig_t;
-#define HSE_TEMP_SENS_VIO_ACTIVATED       ((hseTempSensVioConfig_t)(0xA5U))  /**< @brief HSE enables the temperature sensor violation in SNVS. */
-#define HSE_TEMP_SENS_VIO_DEACTIVATED     ((hseTempSensVioConfig_t)(0x5AU))  /**< @brief HSE disables the temperature sensor violation in SNVS.  */
-#endif /* HSE_SPT_TEMP_SENS_VIO_CONFIG */
+#ifdef HSE_SPT_OTP_BOOT_SEQ_ATTR
+#define HSE_OTP_BOOT_SEQ_MARKER  (0xCEDEADDAUL) /**< @brief The marker that must be used when setting #hseAttrOtpBootSeq_t attribute. */
+#define HSE_OTP_BOOT_SEQ_NOT_SET (0x00000000UL) /**< @brief The OTP_BOOT_SEQ is not set in fuses.*/
 
+/** @brief    Set BOOT_SEQ flag in OTP (called OTP_BOOT_SEQ below);
+ *            this is an OTP-ATTR attribute; refer to #hseAttrId_t.
+ * @details   This attribute complements the BOOT_SEQ flag in IVT with a flag in OTP.
+ *            Setting this attribute enforces the IVT's BOOT_SEQ (IVT_BOOT_SEQ) to 1.
+ *            When setting this attribute:
+ *            - the #HSE_OTP_BOOT_SEQ_MARKER marker must be used
+ *            - the IVT_BOOT_SEQ in IVT must be set to 1 and ADKP must be provisioned
+ *            On read, if the OTP_BOOT_SEQ in fuses is set, HSE returns the HSE_OTP_BOOT_SEQ_MARKER marker;
+ *            otherwise, it returns HSE_OTP_BOOT_SEQ_NOT_SET.
+ *
+ *            When the HSE FW starts, it verifies the value of OTP_BOOT_SEQ (from fuses) against the value of IVT_BOOT_SEQ as follows:
+ *            - If(LC == OEM_PROD or IN_FIELD) and (OTP_BOOT_SEQ == 1) and (OTP_BOOT_SEQ != IVT_BOOT_SEQ), apply a functional reset;
+ *              Otherwise, continue the boot sequence.
+ *
+ *            @note:
+ *            - Having this attribute set in fuses enforces the IVT_BOOT_SEQ to always be set. Therefore, the HSE will never boot
+ *              in non-secure mode. In case of any unexpected boot image corruption (e.g SYS-IMAGE) the device recovery should be performed
+ *              booting the recovery application in the secure mode only. For more details about device recovery, refer to the HSE Firmware Reference Manual.
+
+ * */
+typedef uint32_t hseAttrOtpBootSeq_t;
+#endif /* HSE_SPT_OTP_BOOT_SEQ_ATTR */
 
 /*==================================================================================================
                                  OTFAD context status
@@ -952,7 +1046,7 @@ typedef uint8_t hseOtfadContextStatus_t;
 #define HSE_OTFAD_CTX_ACTIVE              ((hseOtfadContextStatus_t)(0xACU))    /**< @brief OTFAD context configured and active. */
 #define HSE_OTFAD_CTX_INACTIVE            ((hseOtfadContextStatus_t)(0xDEU))    /**< @brief OTFAD context configured but not active. */
 
-/** @brief   OTFAD context status.
+/** @brief   OTFAD context status (RO-ATTR attribute; refer to #hseAttrId_t).
  *  @details The OTFAD context status for all OTFAD entries. */
 typedef struct
 {
@@ -968,7 +1062,23 @@ typedef struct
 /*==================================================================================================
                                 OTP Rollback Protection Policy
 ==================================================================================================*/
-/** @brief   Disable the OTP rollback protection when updating the FW Blue Image and/or SYS-IMG.
+
+/** @brief   Configuration option for anti-rollback counter (anti-RBC) handling.
+ *  @details Tells if the rollback protection mechanism is active or not, or
+ *           if the anti-RBC is updated in fuses at boot time or on-demand by calling the #hseOnDemandAntiRbcUpdateSrv_t service.
+ */
+typedef uint32_t hseDisableAntiRbcCfg_t;
+#define HSE_DIS_ANTI_RBC_CFG_NO         ((hseDisableAntiRbcCfg_t)(HSE_CFG_NO))    /**< @brief The rollback protection mechanism is enabled, \
+                                                                                              and the anti-RBC counter is updated automatically at start-up \
+                                                                                              if LC != CUST_DEL or BOOT_SEQ == 1 and at least one core is booted. \
+                                                                                              This is the default configuration. */
+#define HSE_DIS_ANTI_RBC_CFG_YES        ((hseDisableAntiRbcCfg_t)(HSE_CFG_YES))   /**< @brief The rollback protection is disabled (the rollback
+                                                                                              protection mechanism is disabled and anti-RBC is not updated in fuses). */
+#define HSE_ON_DEMAND_ANTI_RBC_UPDATE   ((hseDisableAntiRbcCfg_t)(0x676E2064UL))  /**< @brief The rollback protection mechanism is enabled, \
+                                                                                              and the anti-RBC is updated in fuses only \
+                                                                                              on-demand by calling the #hseOnDemandAntiRbcUpdateSrv_t service. */
+
+/** @brief   Disable the OTP rollback protection when updating the FW Blue Image and/or SYS-IMG (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  *  @details After updating the new FW Blue Image or SYS-IMG (NVM keystore) in external flash, a system reset is needed to update the anti-rollback
  *           counter in OTP area (fuses). To be able to update the fuse counter, the VDD_EFUSE must be always powered or
  *           can be powered at start-up by HSE FW (if the VDD_EFUSE configuration word from IVT is supported; refer to the HSE Firmware Reference Manual).
@@ -978,19 +1088,20 @@ typedef struct
  *           - SuperUser rights are needed to configure this attribute. */
 typedef struct
 {
-    /** @brief This field controls the rollback protection for FW Blue Image  and/or SYS-IMG update:
-     *         - HSE_CFG_NO (default configuration): the OTP rollback protection is enabled.
-     *           At boot time, HSE updates the OTP counter (the VDD_EFUSE must be powered).
-     *         - HSE_CFG_YES: disable the OTP rollback protection. */
-    hseAttrCfg_t disableOtpRollbackProtect;
+    /** @brief This field controls the rollback protection configuration for FW Blue Image and/or SYS-IMG update.
+     *         Enables or disable the rollback protection; if enabled, it configures if the anti-RBC is updated in fuses at boot time or on-demand.
+     *         See #hseDisableAntiRbcCfg_t for more details. */
+    hseDisableAntiRbcCfg_t disableOtpRollbackProtect;
+
     /** @brief Prevents the firmware from running if it was loading from a Pink FW Image.
      *         This configuration is ignored for non-secure boot.
      *         - HSE_CFG_NO (default configuration): allow HSE to run if the firmware was loading from a Pink or Blue FW Image.
      *         - HSE_CFG_YES: disallow HSE to run if firmware was loading from a Pink FW Image.
      *           Only the FW Blue Image can be used after setting this field to HSE_CFG_YES.
      *         @note
-     *         - Only the Blue FW image provides the rollback protection.
-     *         - For secure-boot use case, if disableOtpRollbackProtect == HSE_CFG_YES and the firmware was loaded from PINK FW image ,
+     *         - Only the Blue FW image provides the rollback protection. Once the disallowRunningFromPinkFWImage attribute is set,
+     *           no FW pink image shall be used in primary or back-up locations (only Blue FW image must be used).
+     *         - For secure-boot use case, if disallowRunningFromPinkFWImage == HSE_CFG_YES and the firmware was loaded from PINK FW image ,
      *           HSE performs a function reset; otherwise, it will continue its execution.
      *         - For non-secure boot, this configuration is ignored. */
     hseAttrCfg_t disallowRunningFromPinkFWImage;
@@ -1018,18 +1129,22 @@ typedef uint8_t hseFircDivConfig_t;
 /*==================================================================================================
                                  HSE_B Configure Secure Recovery
 ==================================================================================================*/
-/** @brief    Secure Recovery bit.
- * @details   This setting is used by SecureBAF/HSE Firmware to check whether the firmware enters in the Secure Recovery state or not.
+/** @brief   Secure Recovery bit (OTP-ATTR attribute).
+* @details   This setting is used by SecureBAF/HSE Firmware to check whether the firmware enters in the Secure Recovery state or not.
+*            Setting the attribute multiple times is allowed (HSE_SRV_RSP_OK is returned).
+*            The UTEST programming is done only the first time and skipped for subsequent calls.
 */
 typedef uint8_t hseAttrConfigSecureRecovery_t;
-#define HSE_SECURE_RECOVERY_DISABLE             ((hseAttrConfigSecureRecovery_t)0x0U)            /**< @brief
-                                                                                                  * - Secure Recovery is disabled by HSE Firmware.
-                                                                                                  * - Write: It does not affect the value at all.
+#define HSE_SECURE_RECOVERY_DISABLE             ((hseAttrConfigSecureRecovery_t)0x0U)            /**< @brief \
+                                                                                                  * - Secure Recovery is disabled by HSE Firmware. \
+                                                                                                  * - Write: It does not affect the value at all. \
+                                                                                                  * - Read: Secure Recovery OTP flag is not programmed. \
                                                                                                   */
 
-#define HSE_SECURE_RECOVERY_ENABLE              ((hseAttrConfigSecureRecovery_t)0x1U)            /**< @brief
-                                                                                                  * - Secure Recovery is enabled by HSE Firmware.
-                                                                                                  * - Write: It enables the Secure Recovery mode.
+#define HSE_SECURE_RECOVERY_ENABLE              ((hseAttrConfigSecureRecovery_t)0x1U)            /**< @brief \
+                                                                                                  * - Secure Recovery is enabled by HSE Firmware. \
+                                                                                                  * - Write: It enables the Secure Recovery mode. \
+                                                                                                  * - Read: Secure Recovery OTP flag is programmed. \
                                                                                                   */
 
 
@@ -1063,7 +1178,7 @@ typedef hseAttrCfg_t hsePublishNvmKeystoreRamtToFlash_t;
 ==================================================================================================*/
 #ifdef HSE_SPT_RESET_SOC_ON_TAMPER_ATTR
 
-/** @brief   HSE Reset Soc on tamper detection.
+/** @brief   HSE Reset Soc on tamper detection (NVM-RW-ATTR attribute; refer to #hseAttrId_t).
  *  @details By default HSE does not reset the Soc on tamper detection (this attribute is configured as #HSE_CFG_NO),
  *           Instead it signals an HSE error (see #hseError_t) and enter shutdown mode.
  *           To reset the Soc, the host application must set this attribute to #HSE_CFG_YES and publish SYS-IMG.
@@ -1073,6 +1188,67 @@ typedef hseAttrCfg_t hsePublishNvmKeystoreRamtToFlash_t;
 typedef hseAttrCfg_t hseResetSocOnTamper_t;
 
 #endif /* HSE_SPT_RESET_SOC_ON_TAMPER_ATTR */
+
+#ifdef HSE_SPT_SENSOR_ARMING
+/**
+ * @brief    Set security sensors configuration.
+ * @details  Configuration attribute (#HSE_SENSOR_DISARMING_ON_STARTUP_ATTR_ID) used to disarm the supported security sensors at the end of the boot phase
+ *           or to set the on-demand configuration policy.
+ *
+ *           Sensor configuration:
+ *              The default sensor state for a particular SoC can be known by reading the #hseSensorsStateAttr_t attribute (only if the loaded SYS-IMG
+ *              does not have the sensor boot states already configured in #hseSensorDisarmingAttr_t).
+ *              At the end of the boot phase, the supported sensors have the following default states:
+ *              - GDET: #HSE_SENSOR_STATE_DISARMED
+ *              - other supported sensors (see #hseSensorsStateAttr_t): #HSE_SENSOR_STATE_ARMED
+ *              - unsupported sensors: #HSE_SENSOR_STATE_UNUSED
+ *
+ *              The attribute can be configured to ONLY disarm the security sensors at boot:
+ *              - If BOOT_SEQ == 0 and sensorCfg[sensor_index] == #HSE_SENSOR_DISARMED, the sensor is disarmed after loading/verifying SYS-IMG.
+ *              - If BOOT_SEQ == 1 and sensorCfg[sensor_index] == #HSE_SENSOR_DISARMED, the sensor is disarmed after verifying the SMR/BSB and before
+ *                releasing any application core from reset (based on Core Reset table).
+ *              - If sensorCfg[sensor_index] == #HSE_SENSOR_STATE_UNUSED, the state of the sensor is not changed and left in the default set.
+ *              - If sensorCfg[sensor_index] == #HSE_SENSOR_STATE_ARMED, HSE will return HSE_SRV_RSP_INVALID_PARAM status.
+ *
+ *          On-demand sensor configuration policy:
+ *              - Determines if the #hseOnDemandSensorArming_t service can/cannot be used at runtime
+ *              - By default, the #hseOnDemandSensorArming_t service cannot be used at runtime (allowOnDemandSensorArming == HSE_CFG_NO)
+ *
+ *           @note
+ *           - SU right are needed to configure this SYS-IMG attribute.
+ *           - Only the sensors provided by #HSE_SENSORS_STATE_ATTR_ID attribute (armed state) can be disarmed.
+ *             Otherwise, the HSE_SRV_RSP_NOT_ALLOWED status is returned.
+ *           - This attribute allows to disarm sensors at start-up to mitigate the risk of HSE entering into shutdown mode due
+ *             to customer's operating environment.
+ *           - GDET is disarmed by default by HSE at the end of the boot phase. To enable GDET, the user needs to use #hseOnDemandSensorArming_t service.
+ *           - Once the state of a sensor is set to #HSE_SENSOR_DISARMED, the only way to arm it again is through #hseOnDemandSensorArming_t service.
+ */
+typedef struct
+{
+    /** @brief   INPUT: Byte sensor list to be configured for each supported sensor at the end of the boot phase.
+     *                  Only #HSE_SENSOR_DISARMED (disarm an armed security sensor) and #HSE_SENSOR_STATE_UNUSED (mantain default sensor state)
+     *                  options can be used. */
+    hseSensorState_t    sensorCfg[8U];
+
+    /** @brief   INPUT: Allow/disallow to use the #hseOnDemandSensorArming_t service during runtime.
+     *                  By default, this parameter is set to #HSE_CFG_NO (#hseOnDemandSensorArming_t service can NOT be used) */
+    hseAttrCfg_t        allowOnDemandSensorArming;
+    uint8_t             reserved[8U];
+} hseSensorDisarmingAttr_t;
+#endif /* HSE_SPT_SENSOR_ARMING */
+
+/** @brief   Disable the pair wise consistency test at import for RSA/ECC/DH key pairs (SET-ONLY-ONCE-ATTR attribute; refer to #hseAttrId_t).
+ *  @details By default, when importing a RSA/ECC/DH key pair, HSE checks the pair wise consistency of the provided public and private keys.
+ *           Since this operation is time consuming, the host can disable this check to speed up the key import operation.
+ *           To disable the pair wise consistency test, the host must set this attribute to #HSE_CFG_YES.
+ *           By default, this attribute is set to #HSE_CFG_NO (pair wise consistency is checked).
+ *
+ *           @note: This is a "SET-ONLY-ONCE-ATTR" attribute.
+ *           The attribute can only be set from #HSE_CFG_NO to #HSE_CFG_YES,
+ *           using the set attribute service. Once the attribute is set to #HSE_CFG_YES,
+ *           it cannot be set back to #HSE_CFG_NO in the current power cycle.
+ */
+typedef hseAttrCfg_t hseDisablePairWiseConsistencyTest_t;
 
 /*==================================================================================================
                                  GLOBAL VARIABLE DECLARATIONS

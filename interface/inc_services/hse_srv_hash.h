@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -141,7 +141,9 @@ typedef struct
     /** @brief   INPUT: Address of the input message. <br>
      *                  For Miyaguchi-Preneel, according to SHE specification, the input shall be (K | C | padding). <br>
      *                  Ignored if inputLength is zero.<br>
-     *           STREAMING USAGE: Used in all steps (except if inputLength is zero). */
+     *           STREAMING USAGE: Used in all steps (except if inputLength is zero).
+     *  @note    If the HOST_ADDR is on 64 bits and the hash algorithm is not supported in HW (#HSE_SPT_HW_SHA3 macro is not defined),
+     *           the address must fall within the 32-bit address range. */
     HOST_ADDR        pInput;
 
     /** @brief   INPUT/OUTPUT: Pointer to a uint32_t location in which the hash length in bytes is stored.

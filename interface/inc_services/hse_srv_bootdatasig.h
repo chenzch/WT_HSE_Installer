@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -69,10 +69,13 @@ extern "C"{
  *        (e.g. header information, source and destination addresses, app code length, tag location).
  *
  *   @note
- *   If both SMR and BSB are configured, HSE executes the secure boot using SMR only. If the
- *   SYS-IMG is not loaded because it is corrupted (the SMRs are not present), HSE executes the secure boot
- *   using BSB. In this case, the App BSB can be seen as a recovery image (to recover the SYS-IMG).
- *   Note that the App image can be booted without loading the SYS-IMG.
+ *   - If both SMR and BSB are configured, HSE executes the secure boot using SMR only. If the
+ *     SYS-IMG is not loaded because it is corrupted (the SMRs are not present), HSE executes the secure boot
+ *     using BSB. In this case, the App BSB can be seen as a recovery image (to recover the SYS-IMG).
+ *     Note that the App image can be booted without loading the SYS-IMG.
+ *   - For SAF86XX devices, if the flashless boot mode is configured (for the BSB feature),
+ *     the HSE firmware authenticates the image in place (without copying the image) when the AppBL
+ *     address in the IVT is equal to the RAM start pointer in AppBL image header.
  */
 #ifdef HSE_SPT_BSB
 typedef struct
@@ -95,6 +98,7 @@ typedef struct
  *           For HSE_H/M, the following Boot Data Images can be signed:
  *              - IVT, DCD, SELF-TEST and Application Image (also referred below as App BSB Image).
  *              - LPDDR4 Flash image for S32Z/E (HSE_H) devices.
+ *              - the Flashless Boot Image Header for SAF86XX (HSE_M) devices. <br>
  *           For HSE_B, the following Boot Data Images can be signed:
  *              - IVT and Application Image (also referred below as App BSB Image).
  *                The computed random IV and GMAC tag must be placed/copied at the end of the image.
@@ -128,6 +132,7 @@ typedef struct
 {
     /** @brief  INPUT:  The address of the Boot Data Image. The Boot Data Image can be:
      *                  - For HSE_H/M, IVT or DCD or SELF-TEST or App BSB or LPDDR4(for S32Z/E devices) image; the address may be a QSPI-FLASH (external flash) or system RAM address. <br>
+     *                  - For SAF86XX devices (HSE_M), the Flashless Boot Image Header address must be system RAM address. <br>
      *                  - For HSE_B, the IVT or App BSB image; the address can be a flash or
      *                    system RAM address. <br>
      *
@@ -139,6 +144,7 @@ typedef struct
      *                      - For S32Z/E devices (HSE_H), DCD/SELF-TEST Image length must be maximum 32768 bytes (DCD/ST Image header(4 bytes) + maximum DCD/ST Image data (32764 byte))
      *                      - For other devices,DCD/SELF-TEST Image length must be maximum 8192 bytes (DCD/ST Image header(4 bytes) + maximum DCD/ST Image data (8188 byte))
      *                      - For S32Z/E devices (HSE_H), the maximum length of the LPDDR4 Flash image must be smaller or equal to (7MB + 336bytes)(Image header(336 bytes) + code length(maximum 7MB))
+     *                      - For SAF86XX devices (HSE_M), the maximum length of the Flashless Boot Image Header must be smaller or equal to 1024 bytes
      *                      - pInImage can point to the App BSB Image that contains the App header and App code:
      *                          - App image header shall be specified as hseAppHeader_t. It has a fixed size of 64 bytes.
      *                          - App image code shall follow the App image header and has a variable length specified by "codelength" parameter.

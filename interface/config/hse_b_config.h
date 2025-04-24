@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*    Copyright 2019 - 2023 NXP.
+*    Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -245,7 +245,6 @@ extern "C"{
 
     #define HSE_SPT_OTA_FIRMWARE_UPDATE            /**< @brief Support OTA Firmware Update */
     #define HSE_SPT_OTA_SBAF_UPDATE                /**< @brief Support SBAF update */
-    #define HSE_SPT_FW_BACKUP_ENABLE               /**< @brief Support BACKUP Feature. */
     #define HSE_SPT_FW_INTEGRITY_CHECK             /**< @brief Support HSE flash memory integrity check. */
     #define HSE_SPT_ERASE_FW                       /**< @brief Erase Active HSE FW, Backup (if present) and SYS-IMG from internal secure flash memory in CUST_DEL lifecycle */
 
@@ -261,11 +260,19 @@ extern "C"{
 
 #ifdef HSE_SPT_ECC_USER_CURVES
     #define HSE_NUM_OF_USER_ECC_CURVES    (1U)      /**< @brief The number of ECC curves the user can load into the HSE */
-#endif
+#endif /* HSE_SPT_ECC_USER_CURVES */
 
     #define HSE_TOTAL_NUM_OF_KEY_GROUPS   (32U)     /**< @brief  The total number of catalog configuration entries for both NVM and RAM catalogs.*/
+    #ifdef HSE_SPT_MSC_KEYSTORE
+    #define HSE_ACE_KEYSTORE_MAX_SLOTS    (80U)
+    #endif /* HSE_SPT_MSC_KEYSTORE */
+    #ifdef HSE_SPT_MSC_KEYSTORE
+    #define HSE_MAX_NVM_STORE_SIZE              ((7768U) + ((HSE_SPT_NXP_KEY_STORE_NO_OF_SECTORS - 1U) * HSE_SECTOR_SIZE)) /**< @brief  NVM key store size (in bytes) */
+    #else
+    #define HSE_MAX_NVM_STORE_SIZE              (7768U + ((HSE_SPT_NXP_KEY_STORE_NO_OF_SECTORS - 1U) * HSE_SECTOR_SIZE)) /**< @brief  NVM key store size (in bytes) */
+     #endif
+
     #define HSE_MAX_RAM_STORE_SIZE        (6144U)   /**< @brief  RAM key store size (in bytes) */
-    #define HSE_MAX_NVM_STORE_SIZE        (7768U + ((HSE_SPT_NXP_KEY_STORE_NO_OF_SECTORS - 1U) * HSE_SECTOR_SIZE))   /**< @brief  NVM key store size (in bytes) */
 
     #define HSE_AES_KEY_BITS_LENS         {128U, 192U, 256U}   /**< @brief  AES key bit length (set to zero to disable a AES key size)*/
 
@@ -293,7 +300,7 @@ extern "C"{
 #endif
 
 #ifdef HSE_SPT_FAST_CMAC
-    #define HSE_DEFAULT_MIN_FAST_CMAC_TAG_BITLEN   (64U)         /**< @brief  FAST CMAC default min bit length*/
+    #define HSE_DEFAULT_MIN_FAST_CMAC_TAG_BITLEN   (32U)         /**< @brief  FAST CMAC default min bit length*/
 #endif
 
 #ifdef HSE_SPT_SIPHASH

@@ -9,7 +9,7 @@
 *   @{
 */
 /*==================================================================================================
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -74,9 +74,9 @@ typedef uint8_t hseKeyCatalogId_t;
                        (((hseKeyHandle_t)((hseKeyGroupIdx_t)(groupIdx))) << 8U) | \
                        (((hseKeyHandle_t)((hseKeySlotIdx_t)(slotIdx)))))
 
-#define GET_CATALOG_ID(keyHandle)     ((hseKeyCatalogId_t)((keyHandle) >> 16U)) /**< @brief Get key catalog Id. */
-#define GET_GROUP_IDX(keyHandle)      ((hseKeyGroupIdx_t)((keyHandle) >> 8U))   /**< @brief Get key group index. */
-#define GET_SLOT_IDX(keyHandle)       ((hseKeySlotIdx_t)(keyHandle))            /**< @brief Get key slot index. */
+#define GET_CATALOG_ID(keyHandle)     ((hseKeyCatalogId_t)(((keyHandle) >> 16U) & 0xFFU)) /**< @brief Get key catalog Id. */
+#define GET_GROUP_IDX(keyHandle)      ((hseKeyGroupIdx_t)(((keyHandle) >> 8U) & 0xFFU))   /**< @brief Get key group index. */
+#define GET_SLOT_IDX(keyHandle)       ((hseKeySlotIdx_t)((keyHandle) & 0xFFU))            /**< @brief Get key slot index. */
 
 #define HSE_INVALID_KEY_HANDLE        ((hseKeyHandle_t)0xFFFFFFFFUL)   /**< @brief HSE invalid key . */
 #define HSE_INVALID_GROUP_IDX         ((hseKeyGroupIdx_t)0xFFU)        /**< @brief HSE invalid key group index. */
@@ -123,8 +123,8 @@ typedef uint8_t hseKeyType_t;
 
 /** @brief    The key flags specifies the operations or restrictions that can be apply to a key. */
 typedef uint16_t hseKeyFlags_t;
-#define HSE_KF_USAGE_ENCRYPT          ((hseKeyFlags_t)1U << 0U)     /**< @brief Key is used to encrypt data (including keys if HSE_KF_USAGE_KEY_PROVISION is set). */
-#define HSE_KF_USAGE_DECRYPT          ((hseKeyFlags_t)1U << 1U)     /**< @brief Key is used to decrypt data (including keys if HSE_KF_USAGE_KEY_PROVISION is set). */
+#define HSE_KF_USAGE_ENCRYPT          ((hseKeyFlags_t)1U << 0U)     /**< @brief Key is used to encrypt data. If the HSE_KF_USAGE_KEY_PROVISION flag is set, the key can not be used for data encryption (only for key encryption). */
+#define HSE_KF_USAGE_DECRYPT          ((hseKeyFlags_t)1U << 1U)     /**< @brief Key is used to decrypt data. If the HSE_KF_USAGE_KEY_PROVISION flag is set, the key can not be used for data decryption (only for key decryption).*/
 #define HSE_KF_USAGE_SIGN             ((hseKeyFlags_t)1U << 2U)     /**< @brief Key is used to generate digital signatures or MACs of any data
                                                                      *          (including keys if HSE_KF_USAGE_KEY_PROVISION is set).*/
 #define HSE_KF_USAGE_VERIFY           ((hseKeyFlags_t)1U << 3U)     /**< @brief Key is used to verify digital signatures or MACs of any data
@@ -149,6 +149,13 @@ typedef uint16_t hseKeyFlags_t;
        (HSE_KF_USAGE_ENCRYPT | HSE_KF_USAGE_DECRYPT | HSE_KF_USAGE_SIGN | HSE_KF_USAGE_VERIFY | HSE_KF_USAGE_EXCHANGE | \
         HSE_KF_USAGE_DERIVE | HSE_KF_USAGE_KEY_PROVISION | HSE_KF_USAGE_AUTHORIZATION | HSE_KF_USAGE_SMR_DECRYPT |      \
         HSE_KF_USAGE_XTS_TWEAK | HSE_KF_USAGE_OTFAD_DECRYPT)
+
+/** @brief    The Key Usage flags mask for Managed Security Component (MSC) targeted keys.
+ *            The accepted key flags for keys that are configured in Key Handle Translation Table (KHTT) for MSC keystore.
+ *            These key flags can be configured only with HSE_KF_USAGE_ENCRYPT, HSE_KF_USAGE_DECRYPT, HSE_KF_USAGE_SIGN or HSE_KF_USAGE_VERIFY.
+ */
+#define HSE_KF_MSC_USAGE_MASK   \
+       (HSE_KF_USAGE_ENCRYPT | HSE_KF_USAGE_DECRYPT | HSE_KF_USAGE_SIGN | HSE_KF_USAGE_VERIFY)
 
 /** @brief    The Key Access flags mask. */
 #define HSE_KF_ACCESS_MASK  (HSE_KF_ACCESS_WRITE_PROT | HSE_KF_ACCESS_DEBUG_PROT | HSE_KF_ACCESS_EXPORTABLE)
@@ -188,7 +195,7 @@ typedef uint16_t hseKeyFlags_t;
  *       - The service is used in pair with another RSA key. The email service provides a signature which is verified using the RSA key.
  * \code
  *
- * (#HSE_KF_USAGE_DERIVE | #HSE_KF_USAGE_VERIFY | #HSE_KF_USAGE_ENCRYPT | #HSE_KF_USAGE_DECRYPT | #HSE_KF_USAGE_KEY_PROVISION)
+ * (#HSE_KF_USAGE_DERIVE | #HSE_KF_USAGE_VERIFY | #HSE_KF_USAGE_DECRYPT | #HSE_KF_USAGE_KEY_PROVISION)
  *
  * \endcode */
 #define HSE_ROM_KEY_AES256_KEY1       ((hseKeyHandle_t)0x00000001UL)
@@ -203,7 +210,7 @@ typedef uint16_t hseKeyFlags_t;
 #define HSE_ROM_KEY_AES256_KEY2       ((hseKeyHandle_t)0x00000002UL)
 #endif /* HSE_SPT_NXP_RFE_SW */
 
-/** @brief This key can be used for RSA encrypt and signature verify, having the following usage restrictions:
+/** @brief This key can be used for RSA decryption and signature verify, having the following usage restrictions:
  *  @note
  *       - This key is a public RSA key owned by NXP; the corresponding private key is owned by NXP.
  *       - It can be used during key provision to import an application key signed.
@@ -212,7 +219,7 @@ typedef uint16_t hseKeyFlags_t;
  *       - The service is used in pair with another ROM key i.e HSE_ROM_KEY_AES256_KEY1.
  * \code
  *
- * (#HSE_KF_USAGE_ENCRYPT | #HSE_KF_USAGE_VERIFY | #HSE_KF_USAGE_KEY_PROVISION)
+ * (#HSE_KF_USAGE_DECRYPT | #HSE_KF_USAGE_VERIFY | #HSE_KF_USAGE_KEY_PROVISION)
  *
  * \endcode */
 #define HSE_ROM_KEY_RSA3072_PUB_KEY0  ((hseKeyHandle_t)0x00000100UL)
@@ -292,7 +299,8 @@ typedef uint8_t hseEccCurveId_t;
 #define HSE_EC_25519_CURVE25519           ((hseEccCurveId_t)10U)
 #define HSE_EC_448_ED448                  ((hseEccCurveId_t)11U)
 #define HSE_EC_448_CURVE448               ((hseEccCurveId_t)12U)
- /* The curve IDs that can be set at init time */
+
+/* The curve IDs that can be set at init time */
 #define HSE_EC_USER_CURVE1                ((hseEccCurveId_t)101U)
 #define HSE_EC_USER_CURVE2                ((hseEccCurveId_t)102U)
 #define HSE_EC_USER_CURVE3                ((hseEccCurveId_t)103U)

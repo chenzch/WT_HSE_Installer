@@ -14,7 +14,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -62,6 +62,7 @@ extern "C"{
 ==================================================================================================*/
 
 #if defined(HSE_SPT_FLASHLESS_DEV)
+
 /** @brief  The size of the NVM container for the Monotonic Counter table (in bytes).*/
 #define HSE_NVM_CONTAINER_CNT_TBL_SIZE   ((HSE_NUM_OF_MONOTONIC_COUNTERS * sizeof(uint64_t)) + 48U)
 
@@ -79,6 +80,7 @@ typedef uint8_t hseNvmCntTblAction_t;
                                  STRUCTURES AND OTHER TYPEDEFS
 ==================================================================================================*/
 
+#if !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS)
 /**
  * @brief Increment a monotonic counter service with a specific value.
  * @details
@@ -103,25 +105,6 @@ typedef struct
     /** @brief   OUTPUT: The address where the counter value is returned (a uint64_t value). */
     HOST_ADDR               pCounterVal;
 } hseReadCounterSrv_t;
-
-
-#if defined(HSE_SPT_FLASHLESS_DEV)
-/**
- * @brief    Publish or load the monotonic counter table.
- * @details   This is supported only for HSE_H/M devices and should be used to publish/load
- *            the monotonic counter table in NVM
- * */
-typedef struct
-{
-    /** @brief  INPUT:   Publish/load the NVM container for the Monotonic Counter table. */
-    hseNvmCntTblAction_t    action;
-    uint8_t                 reserved[3];
-    /** @brief  OUTPUT:  The address of the NVM container for the Monotonic Counter table.
-     *                   The size of the NVM container is #HSE_NVM_CONTAINER_CNT_TBL_SIZE. */
-    HOST_ADDR               pNvmContainerCntTbl;
-} hsePublishLoadCntTblSrv_t;
-#endif /* HSE_SPT_FLASHLESS_DEV */
-
 
 /**
  * @brief   Initialize and configure a secure counter.
@@ -163,9 +146,31 @@ typedef struct
     uint8_t                 RPBitSize;
     uint8_t                 reserved[3];
 } hseConfigSecCounterSrv_t;
+#endif /* !defined(HSE_SPT_RESTRICT_COUNTER_ACCESS) */
 
-
-
+#if defined(HSE_SPT_FLASHLESS_DEV)
+/**
+ * @brief     This service is used to publish (export) or load (import) the monotonic counter table.
+ * @details   This is supported only for HSE_H/M devices and should be used to publish/load
+ *            the monotonic counter table in the external RAM memory and further to be made persistent in the flash memory.
+ *            The monotonic counter table is exported as an encrypted blob using a device specific key.
+ *            The table can be exported either when the HSE_WA_PUBLISH_COUNTER_TBL event is triggered
+ *            (at least one Rollover Protection counterpart from a counter was updated).
+ *            Depending on the tolerance for the loss of counter data, the table can be published and stored periodically.
+ * */
+typedef struct
+{
+    /** @brief  INPUT:    Option to publish or load the monotonic container blob. */
+    hseNvmCntTblAction_t  action;
+    /** @brief  INPUT:    Reserved for future use. */
+    uint8_t               reserved[3];
+    /** @brief  INPUT:    The address from where to load the encrypted counter table.
+     *                    The address should point to a valid counter table blob.
+     *          OUTPUT:   The address where to publish the encrypted counter table blob.
+     *                    The address should point to a buffer of #HSE_NVM_CONTAINER_CNT_TBL_SIZE bytes. */
+    HOST_ADDR             pNvmContainerCntTbl;
+} hsePublishLoadCntTblSrv_t;
+#endif /* HSE_SPT_FLASHLESS_DEV */
 
 /*==================================================================================================
                                  GLOBAL VARIABLE DECLARATIONS

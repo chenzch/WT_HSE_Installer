@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -110,7 +110,11 @@ typedef struct
 
     /** @brief   INPUT: Specifies that the input is already hashed with the algorithm in specified in the sign scheme.
      *                  Not valid for any signing scheme that does not perform prehashing (i.e. PureEDDSA)
-     *           @note The hashing algorithm must still be provided as it is included in the signature for various schemes (e.g. RSA)
+     *           @note  The hashing algorithm from signScheme and the input length must be:
+     *                  - for RSA scheme:   hashAlgo != HSE_HASH_ALGO_NULL, where the inputLength must be equal to the hash ouput length;
+     *                  - for ECDSA scheme: hashAlgo != HSE_HASH_ALGO_NULL, where the inputLength must be equal to the hash ouput length;
+     *                                      hashAlgo == HSE_HASH_ALGO_NULL, where the inputLength must be within (0, 64];
+     *                  - for EDDSA scheme: hashAlgo is not used and the inputLength should be the output length of the hash associated with the curve;
      *           STREAMING USAGE: Not supported in streaming mode.*/
     bool_t          bInputIsHashed;
 
@@ -158,7 +162,11 @@ typedef struct
 
     /** @brief   INPUT: The address of the message to be signed/verify.
      *                  For RSA schemes, this is the actual (not pre-hashed) input. <br>
-     *           STREAMING USAGE: Used in all steps.*/
+     *           STREAMING USAGE: Used in all steps.
+     *  @note    If the HOST_ADDR is on 64 bits:
+     *              - For PureEDDSA: the address must fall within the 32-bit address range.
+     *              - If hash algorithm is not supported in HW (#HSE_SPT_HW_SHA3 macro is not defined) and input is not hashed,
+     *                the address must fall within the 32-bit address range. */
     HOST_ADDR       pInput;
 
     /** @brief   INPUT/OUTPUT: An array of two addresses of two uint32_t values containing signature lengths. It is input/output for "generate" and input for "verify".

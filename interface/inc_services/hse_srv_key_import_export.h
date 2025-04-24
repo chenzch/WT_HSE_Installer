@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019 - 2024 NXP.
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -107,7 +107,7 @@ typedef union
  *     - To import an encrypted/authenticated NVM key, the provided provision key(s) must have the same group owner as the imported NVM key.
  *     - To import an encrypted/authenticated NVM symmetric key using AEAD, the pointer to key info must be in the additional data
  *     - The key properties (keyInfo) along with the public key values are always imported in plain format.
- *  2. SuperUser key restrictions:
+ *  2. Restrictions for SuperUser rights:
  *     - NVM keys:
  *         - In empty slots, an encrypted key can be imported only authenticated, and a plain key can be imported
  *           with/without authentication (public keys must be imported in plain).
@@ -115,7 +115,7 @@ typedef union
  *     - RAM keys:
  *         - An encrypted key can be imported only authenticated. A plain key can be imported with/without authentication.
  *           Exception: RAM provision keys can be imported only authenticated.
- *  3. User key restrictions:
+ *  3. Restrictions for User rights:
  *     - NVM keys:
  *         - NVM secrets (symmetric keys and key pairs) can be imported only encrypted and authenticated.
  *           For key pair, private value must be encrypted and public value(s) unencrypted.

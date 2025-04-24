@@ -10,7 +10,8 @@
  */
 
 /*==================================================================================================
- *   Copyright 2019 - 2023 NXP
+ *
+ *   Copyright 2019-2024 NXP
  *
  *   This software is owned or controlled by NXP and may only be used strictly in accordance with
  *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -97,7 +98,8 @@ typedef struct
      *                  - #HSE_SIPHASH_VARIANT_128: 128 bits (16 bytes) */
     hseKeyHandle_t      keyHandle;
 
-    /** @brief   INPUT: The input message.*/
+    /** @brief   INPUT: The input message.
+     *  @note    If the HOST_ADDR is on 64 bits, the address must fall within the 32-bit address range. */
     HOST_ADDR           pInput;
 
     /** @brief   INPUT: The tag length in bytes is stored. Zero length is invalid.

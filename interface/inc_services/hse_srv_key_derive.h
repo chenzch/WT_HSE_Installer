@@ -10,7 +10,7 @@
 */
 /*==================================================================================================
 *
-*   Copyright 2019 - 2023 NXP.
+*   Copyright 2019-2024 NXP
 *
 *   This software is owned or controlled by NXP and may only be used strictly in accordance with
 *   the applicable license terms. By expressly accepting such terms or by downloading, installing,
@@ -183,7 +183,8 @@ typedef struct
     uint32_t             saltLength;
     /** @brief INPUT: The salt. Used only if #saltKeyHandle == #HSE_INVALID_KEY_HANDLE. <br>
                If #pSalt is not passed (#pSalt is NULL), default_salt will be used
-               (the default_salt is all-zero byte array of length determined by input block). */
+               (the default_salt is all-zero byte array of length determined by input block).
+        @note  If the HOST_ADDR is on 64 bits, the address must fall within the 32-bit address range. */
     HOST_ADDR            pSalt;
 } hseKdfSalt_t;
 
@@ -379,8 +380,9 @@ typedef struct
     hseKeyHandle_t       targetKeyHandle;
     /** @brief   INPUT: The key material length to be derived (it must be <= slot size). */
     uint16_t             keyMatLen;
-    hseHmacPrfAlgo_t     hmacHash;        /**< @brief INPUT: The hash algorithm for HMAC PRF. \
-                                               @note HSE_M devices do not support SHA2_384/512 hash algorithms for PBKDF2.*/
+    /** @brief INPUT: The hash algorithm for HMAC PRF.
+     *  @note HSE_M and HSE_B platforms do not support SHA2_384/512 hash algorithms for PBKDF2. */
+    hseHmacPrfAlgo_t     hmacHash;
     uint8_t              reserved;
     /** @brief  INPUT: The number of iterations to be performed.
      *                 Should take a value higher than 100. */
@@ -530,6 +532,7 @@ typedef struct
      *                - For master secret, it is concatenation of Server Random Data || Client Random Data.
      *                - For extended master secret, it is the session_hash (refer to rfc7627).
      *                - For Key Expansion, it is concatenation of Client Random Data || Server Random Data. <br>
+     *                - For #pLabel = "client finished" or "server finished", pSeed must be Hash(handshake_messages).
      *                Refer to RFC 5246 for more details.
      */
     HOST_ADDR        pSeed;
@@ -715,10 +718,10 @@ typedef struct
  *           in a temporary shared secret slot (#HSE_KEY_TYPE_SHARED_SECRET).
  *
  *  The key(s) can be copied in NVM/RAM slots as follow:
- *  1. SuperUser key restrictions:
+ *  1. Restrictions for SuperUser rights:
  *        - keys can be copied in NVM key store from the derived key material only in empty slots (an erase shall be performed in advance if needed).
  *        - keys can be copied in RAM key store from the derived key material (RAM keys can be overwritten).
- *  2. User key restrictions:
+ *  2. Restrictions for User rights:
  *        - keys can NOT be copied in NVM key store from the derived key material.
  *        - keys can be copied in RAM key store from the derived key material (RAM keys can be overwritten).
  */
