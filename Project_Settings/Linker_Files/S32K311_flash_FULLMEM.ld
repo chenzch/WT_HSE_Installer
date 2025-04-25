@@ -25,6 +25,7 @@ __STACK_SIZE = 0x00001000;
 MEMORY
 {
   HSE_BINARY  (R)  : ORIGIN = 0x00400000, LENGTH = 0x00040000   /* Leave block 0 for HSE FW binary */
+  SBAF_BINARY (R)  : ORIGIN = 0x00440000, LENGTH = 0x00040000
   DFLASH      (RX) : ORIGIN = 0x10000000, LENGTH = 0x00002000
   SRAM        (RW) : ORIGIN = 0x20400000, LENGTH = 0x00002000
   SRAM_STATUS (RW) : ORIGIN = 0x20402000, LENGTH = 0x00000010
@@ -32,7 +33,8 @@ MEMORY
 }
 
 TARGET(binary) /* specify the file format of binary file */
-INPUT (..\HSE_FW_S32K311_0_2_40_0\hse_full_mem\s32k311_hse_fw_0.12.0_2.40.0_pb230730.bin.pink)
+INPUT (..\HSE_FW_S32K311_0_2_55_0\hse_full_mem\s32k3x1_hse_fw_0.12.0_2.55.0_pb250225.bin.pink)
+INPUT (..\HSE_FW_S32K311_0_2_55_0\hse_full_mem\s32k311_Secure_Baf_0.12.0_0.15.0.6_pb230804.bin.pink)
 OUTPUT_FORMAT(default) /* restore the out file format */
 
 /* Linker script to place sections and symbol values. Should be used together
@@ -69,12 +71,20 @@ SECTIONS
 	.hse_bin :
   	{
   		. = ALIGN (0x4);
-  		..\HSE_FW_S32K311_0_2_40_0\hse_full_mem\s32k311_hse_fw_0.12.0_2.40.0_pb230730.bin.pink (.data)
+  		..\HSE_FW_S32K311_0_2_55_0\hse_full_mem\s32k3x1_hse_fw_0.12.0_2.55.0_pb250225.bin.pink (.data)
   		. = ALIGN (0x4);
   	} > HSE_BINARY
 
   	__HSE_BIN_START = ORIGIN(HSE_BINARY);
-    __SBAF_BIN_START = __HSE_BIN_START;
+
+    .sbaf_bin :
+    {
+        . = ALIGN (0x4);
+        ..\HSE_FW_S32K311_0_2_55_0\hse_full_mem\s32k311_Secure_Baf_0.12.0_0.15.0.6_pb230804.bin.pink (.data)
+        . = ALIGN (0x4);
+    } > SBAF_BINARY
+
+    __SBAF_BIN_START = ORIGIN(SBAF_BINARY);
 
   .boot_header :
   {
