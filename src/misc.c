@@ -22,6 +22,8 @@
 
 #define UTEST_BASE_ADDR (0x1B000000UL)
 
+static void __attribute__((section(".ramcode"))) ActFlash(void);
+
 void FunctionalReset(void) {
 
     __DSB();
@@ -45,6 +47,24 @@ bool checkHseFwFeatureFlagEnabled(void) {
     }
 }
 
+static void __attribute__((section(".ramcode"))) ActFlash(void) {
+
+    uint32_t count = 100;
+
+    FLASH.MCR.B.PGM = 1;
+    FLASH.MCR.B.EHV = 1;
+
+    while (count--) {
+        __asm volatile("nop");
+    }
+
+    while (!FLASH.MCRS.B.DONE) {
+        __asm volatile("nop");
+    }
+
+    FLASH.MCR.B.EHV = 0;
+}
+
 bool EnableHseFeature(void) {
     register uint8_t domain_id = XRDC.HWCFG1.B.DID;
 
@@ -65,12 +85,10 @@ bool EnableHseFeature(void) {
     FLASH.DATA[0].B.PDATA = 0xDDCCBBAA;
     FLASH.DATA[1].B.PDATA = 0xAABBCCDD;
 
-    FLASH.MCR.B.PGM = 1;
-    FLASH.MCR.B.EHV = 1;
-    while (!FLASH.MCRS.B.DONE)
-        ;
-    FLASH.MCR.B.EHV = 0;
-    status          = FLASH.MCRS.B.PEG;
+    ActFlash();
+
+    status = FLASH.MCRS.B.PEG;
+
     FLASH.MCR.B.PGM = 0;
 
     return status;
@@ -100,7 +118,8 @@ bool CheckSBAF(uint8_t socType) {
     bool     ret     = false;
     uint64_t SBAFVer = *(uint64_t *)0x4039C020;
     uint64_t CurrVer = 0x06000F0000000000UL;
-    CurrVer = CurrVer | ( (uint64_t)socType << 8UL );
+
+    CurrVer |= ((uint64_t)socType << 8UL);
     switch (socType) {
     case 0x05: // S32K344, S32K324, S32K314
     case 0x0C: // S32K311, S32K310
@@ -126,6 +145,6 @@ bool DCMLowAddress(void) {
 
 void WaitForHSEDone(void) {
     while (HSE_GPR_3 & (HSE_GPR_3_ERASE | HSE_GPR_3_ACCESS)) {
-    	__NOP();
+        __NOP();
     }
 }

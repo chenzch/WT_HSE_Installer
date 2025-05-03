@@ -112,6 +112,9 @@ void __NAKED __NO_RETURN __attribute__((target("general-regs-only"))) Reset_Hand
 void __NAKED __NO_RETURN Reset_Handler(void)
 #endif
 {
+
+  __asm volatile ("cpsid i");                /* Disable interrupts */
+
   __EARLY_INIT();
 
   /* SP initialization is required for S32Debugger when program loaded into RAM by debugger*/
