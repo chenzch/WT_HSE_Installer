@@ -79,8 +79,9 @@ bool EnableHseFeature(void) {
     } while (FLASH.MCR.B.PEID != domain_id);
 
     /* clear any pending program & erase errors */
-    FLASH.MCRS.B.PEP = 1;
-    FLASH.MCRS.B.PES = 1;
+    FLASH.MCRS.R = (3 << 16);
+    // FLASH.MCRS.B.PEP = 1;
+    // FLASH.MCRS.B.PES = 1;
 
     FLASH.DATA[0].B.PDATA = 0xDDCCBBAA;
     FLASH.DATA[1].B.PDATA = 0xAABBCCDD;

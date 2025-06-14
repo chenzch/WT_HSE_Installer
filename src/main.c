@@ -48,12 +48,17 @@ int main(void) {
         Status_Data.firstInstall                     = false;
     }
 
+    while (MC_ME.PRTN0_CORE2_STAT.B.WFI == 0x0U) {
+        __NOP();
+    }
+
     switch (Status_Data.status) {
     case RAM_STATUS_UNKNWON:
         if (checkHseFwFeatureFlagEnabled()) {
             Status_Data.status = RAM_STATUS_UTEST_OK;
         } else {
             Status_Data.firstInstall = true;
+            WaitForHSEDone();
             EnableHseFeature();
             FunctionalReset();
         }
