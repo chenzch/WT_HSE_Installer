@@ -33,8 +33,8 @@ MEMORY
 }
 
 TARGET(binary) /* specify the file format of binary file */
-INPUT (..\HSE_FW_S32K312_0_2_55_0\hse_full_mem\s32k312_hse_fw_0.13.0_2.55.0_pb250129.bin.pink)
-INPUT (..\HSE_FW_S32K312_0_2_55_0\hse_full_mem\s32k312_Secure_Baf_0.13.0_0.15.0.6_pb230804.bin.pink)
+INPUT (../HSE_FW_S32K312_0_2_55_0/hse_full_mem/s32k312_hse_fw_0.13.0_2.55.0_pb250129.bin.pink)
+INPUT (../HSE_FW_S32K312_0_2_55_0/hse_full_mem/s32k312_Secure_Baf_0.13.0_0.15.0.6_pb230804.bin.pink)
 OUTPUT_FORMAT(default) /* restore the out file format */
 
 /* Linker script to place sections and symbol values. Should be used together
@@ -71,7 +71,7 @@ SECTIONS
 	.hse_bin :
   	{
   		. = ALIGN (0x4);
-  		..\HSE_FW_S32K312_0_2_55_0\hse_full_mem\s32k312_hse_fw_0.13.0_2.55.0_pb250129.bin.pink (.data)
+  		../HSE_FW_S32K312_0_2_55_0/hse_full_mem/s32k312_hse_fw_0.13.0_2.55.0_pb250129.bin.pink (.data)
   		. = ALIGN (0x4);
   	} > HSE_BINARY
 
@@ -80,7 +80,7 @@ SECTIONS
     .sbaf_bin :
     {
         . = ALIGN (0x4);
-        ..\HSE_FW_S32K312_0_2_55_0\hse_full_mem\s32k312_Secure_Baf_0.13.0_0.15.0.6_pb230804.bin.pink (.data)
+        ../HSE_FW_S32K312_0_2_55_0/hse_full_mem/s32k312_Secure_Baf_0.13.0_0.15.0.6_pb230804.bin.pink (.data)
         . = ALIGN (0x4);
     } > SBAF_BINARY
 

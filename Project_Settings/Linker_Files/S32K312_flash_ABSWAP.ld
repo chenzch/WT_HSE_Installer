@@ -33,8 +33,8 @@ MEMORY
 }
 
 TARGET(binary) /* specify the file format of binary file */
-INPUT (..\HSE_FW_S32K312_0_2_55_0\hse_ab_swap\s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink)
-INPUT (.\..\HSE_FW_S32K312_0_2_55_0\hse_ab_swap\s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink)
+INPUT (../HSE_FW_S32K312_0_2_55_0/hse_ab_swap/s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink)
+INPUT (./../HSE_FW_S32K312_0_2_55_0/hse_ab_swap/s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink)
 OUTPUT_FORMAT(default) /* restore the out file format */
 
 /* Linker script to place sections and symbol values. Should be used together
@@ -71,7 +71,7 @@ SECTIONS
 	.hse_bin :
   	{
   		. = ALIGN (0x4);
-  		..\HSE_FW_S32K312_0_2_55_0\hse_ab_swap\s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink (.data)
+  		../HSE_FW_S32K312_0_2_55_0/hse_ab_swap/s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink (.data)
   		. = ALIGN (0x4);
   	} > HSE_BINARY
 
@@ -80,7 +80,7 @@ SECTIONS
   .hse_binb :
   	{
   		. = ALIGN (0x4);
-  		.\..\HSE_FW_S32K312_0_2_55_0\hse_ab_swap\s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink (.data)
+  		./../HSE_FW_S32K312_0_2_55_0/hse_ab_swap/s32k312_hse_fw_1.13.0_2.55.0_pb250129.bin.pink (.data)
   		. = ALIGN (0x4);
   	} > HSE_BINARYB
 
