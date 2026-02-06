@@ -131,6 +131,11 @@ void __attribute__((section(".ramcode"))) HSE_SwitchBlock(void) {
     MC_ME.CTL_KEY.B.KEY        = (uint32_t)0x0000A50FU;
 }
 
+hseSrvResponse_t HSE_FwIntegrityCheck(void) {
+    hseSrvDescriptor_t hseSrvDesc = {HSE_SRV_ID_FW_INTEGRITY_CHECK};
+    return HSE_Send(0, &hseSrvDesc);
+}
+
 /**
  * Format key after HSE install
  */

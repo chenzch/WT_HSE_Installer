@@ -33,6 +33,8 @@ hseSrvResponse_t HSE_GetVersion(hseAttrFwVersion_t *pHseFwVersion);
 
 void __attribute__((section(".ramcode"))) HSE_SwitchBlock(void);
 
+hseSrvResponse_t HSE_FwIntegrityCheck(void);
+
 bool HSE_Write(uint32_t Data);
 
 hseSrvResponse_t HSE_Read(void);

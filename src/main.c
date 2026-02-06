@@ -108,6 +108,10 @@ int main(void) {
             } else {
                 Status_Data.firstBlock = false;
                 Status_Data.status     = RAM_STATUS_UTEST_OK;
+                if (HSE_SRV_RSP_OK != HSE_FwIntegrityCheck()) {
+                    // Update failed force reboot
+                    FunctionalReset();
+                }
                 HSE_SwitchBlock();
             }
             break;
